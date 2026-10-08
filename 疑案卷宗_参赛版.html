@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>疑案卷宗 · 码头仓库疑案</title>
+<link rel="icon" href="data:,">
+<style>
+/* ============ 《疑案卷宗》MVP 样式 ============ */
+:root {
+  --bg: #14171d;
+  --bg2: #1c212b;
+  --panel: #222835;
+  --panel2: #2a3140;
+  --line: #3a4354;
+  --ink: #d9d4c8;
+  --ink-dim: #9aa0ab;
+  --ink-faint: #6c7482;
+  --gold: #c9a227;
+  --gold-dim: #8a6f1f;
+  --red: #c0554a;
+  --red-bg: #3a2623;
+  --green: #7da87a;
+  --blue: #6b93b8;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.45);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  background:
+    radial-gradient(1200px 500px at 50% -100px, #232b3a 0%, var(--bg) 60%);
+  color: var(--ink);
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; }
+input, textarea { font-family: inherit; }
+
+/* ---------- 封面 ---------- */
+#cover {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  background:
+    radial-gradient(900px 420px at 50% 30%, #273042 0%, var(--bg) 70%);
+  text-align: center; padding: 24px;
+}
+.cover-gear {
+  position: absolute; top: 16px; right: 16px; z-index: 51;
+  background: rgba(20, 23, 29, 0.5); border: 1px solid var(--line); color: var(--ink-dim);
+  min-width: 40px; height: 40px; padding: 0 8px; border-radius: 8px; font-size: 18px;
+  cursor: pointer;
+}
+.cover-gear:active { transform: scale(0.92); color: var(--gold); }
+.cover-gear:hover { color: var(--ink); }
+#cover .case-tag {
+  color: var(--gold); letter-spacing: 6px; font-size: 13px; margin-bottom: 14px;
+  border: 1px solid var(--gold-dim); padding: 4px 16px; border-radius: 999px;
+}
+#cover h1 {
+  font-size: clamp(38px, 7vw, 60px); letter-spacing: 10px; color: #efe9da;
+  text-shadow: 0 4px 30px rgba(201, 162, 39, 0.25); font-weight: 800;
+}
+#cover .sub { margin-top: 10px; color: var(--ink-dim); letter-spacing: 2px; font-size: 15px; }
+#cover .brief {
+  max-width: 560px; margin: 28px auto 34px; color: var(--ink-dim); font-size: 14px;
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line);
+  padding: 18px 22px; border-radius: 8px; text-align: left;
+}
+#cover .brief b { color: var(--gold); }
+.btn-start {
+  background: linear-gradient(180deg, #d8b13a, #a07f1c); color: #1c1605;
+  border: none; font-size: 17px; font-weight: 700; letter-spacing: 6px;
+  padding: 14px 54px; border-radius: 8px; box-shadow: 0 6px 24px rgba(201, 162, 39, 0.3);
+  transition: transform 0.12s ease;
+}
+.btn-start:hover { transform: translateY(-2px); }
+#cover .hint { margin-top: 16px; color: var(--ink-faint); font-size: 12px; }
+
+/* ---------- 顶栏 ---------- */
+#topbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(20, 23, 29, 0.95);
+  border-bottom: 1px solid var(--line); padding: 10px 16px;
+}
+@supports ((backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px))) {
+  #topbar { background: rgba(20, 23, 29, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+}
+#topbar .brand { font-weight: 800; letter-spacing: 3px; color: var(--gold); font-size: 15px; white-space: nowrap; }
+#topbar nav { display: flex; gap: 6px; flex: 1; overflow-x: auto; }
+#topbar nav button {
+  background: transparent; border: 1px solid transparent; color: var(--ink-dim);
+  padding: 7px 14px; border-radius: 6px; font-size: 13px; white-space: nowrap;
+}
+#topbar nav button:hover { color: var(--ink); background: var(--panel2); }
+#topbar nav button.active { color: var(--gold); border-color: var(--gold-dim); background: rgba(201, 162, 39, 0.08); }
+#topbar nav button.locked { opacity: 0.45; }
+#topbar .progress {
+  font-size: 12px; color: var(--ink-faint); white-space: nowrap; display: flex; align-items: center; gap: 8px;
+}
+#topbar .btn-gear {
+  background: transparent; border: 1px solid var(--line); color: var(--ink-dim);
+  min-width: 36px; height: 36px; padding: 0 6px; border-radius: 6px; font-size: 16px;
+  position: relative; z-index: 35; cursor: pointer; flex-shrink: 0;
+}
+#topbar .btn-gear:active { transform: scale(0.92); color: var(--gold); }
+#topbar .btn-gear:hover { color: var(--ink); }
+
+/* ---------- 主区 ---------- */
+main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
+.view { display: none; animation: fade 0.25s ease; }
+.view.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-head { margin-bottom: 16px; }
+.page-head h2 { font-size: 20px; letter-spacing: 2px; color: #efe9da; }
+.page-head p { color: var(--ink-dim); font-size: 13px; margin-top: 4px; }
+
+/* ---------- 档案室 ---------- */
+.filter-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.filter-bar button {
+  background: var(--panel); border: 1px solid var(--line); color: var(--ink-dim);
+  padding: 5px 12px; border-radius: 999px; font-size: 12px;
+}
+.filter-bar button.active { color: var(--gold); border-color: var(--gold-dim); background: rgba(201, 162, 39, 0.08); }
+.filter-bar input[type="search"] {
+  margin-left: auto; background: var(--panel); border: 1px solid var(--line); color: var(--ink);
+  padding: 6px 12px; border-radius: 6px; font-size: 13px; width: 200px;
+}
+.arch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+.arch-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 12px 14px; cursor: pointer; transition: border-color 0.15s, background 0.15s; position: relative;
+}
+.arch-card:hover { border-color: var(--gold-dim); background: var(--panel2); }
+.arch-card.read { opacity: 0.82; }
+.arch-card .arch-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.arch-card .arch-type {
+  font-size: 11px; padding: 1px 8px; border-radius: 4px; font-weight: 600;
+}
+.type-物证 { background: rgba(109, 147, 184, 0.16); color: var(--blue); }
+.type-证词 { background: rgba(125, 168, 122, 0.16); color: var(--green); }
+.type-报告 { background: rgba(192, 85, 74, 0.16); color: var(--red); }
+.type-影像 { background: rgba(201, 162, 39, 0.14); color: var(--gold); }
+.arch-card .arch-id { color: var(--ink-faint); font-size: 11px; letter-spacing: 1px; margin-left: auto; }
+.arch-card .arch-content { font-size: 13px; color: var(--ink); }
+.arch-card .arch-meta { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.arch-card .chip { font-size: 11px; color: var(--ink-dim); background: rgba(255, 255, 255, 0.04); padding: 1px 8px; border-radius: 4px; }
+.arch-card .chip.person { color: var(--gold); }
+.arch-card .chip.fake { color: var(--red); border: 1px solid rgba(192, 85, 74, 0.4); }
+.arch-card .badge-new { position: absolute; top: -6px; right: -6px; background: var(--red); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 999px; }
+.arch-card.locked { opacity: 0.55; cursor: default; }
+.arch-card.locked:hover { border-color: var(--line); background: var(--panel); }
+.arch-card .lock-tip { color: var(--ink-faint); font-size: 12px; }
+
+/* ---------- 时间线 ---------- */
+.tl-toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+.tl-toolbar .tl-hint { color: var(--ink-dim); font-size: 13px; flex: 1; min-width: 220px; }
+.btn {
+  background: var(--panel2); border: 1px solid var(--line); color: var(--ink);
+  padding: 7px 16px; border-radius: 6px; font-size: 13px;
+}
+.btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+.btn.primary { background: linear-gradient(180deg, #d8b13a, #a07f1c); color: #1c1605; font-weight: 700; border: none; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.tl-stats { font-size: 12px; color: var(--ink-faint); }
+.tl-stats b { color: var(--gold); }
+
+.tl-board { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.tl-slot {
+  display: flex; gap: 10px; align-items: stretch; background: rgba(255, 255, 255, 0.02);
+  border: 1px dashed var(--line); border-radius: 8px; min-height: 54px; padding: 6px;
+}
+.tl-slot .slot-no {
+  width: 34px; flex: 0 0 34px; display: flex; align-items: center; justify-content: center;
+  color: var(--ink-faint); font-size: 13px; border-right: 1px solid var(--line); margin-right: 4px;
+}
+.tl-slot.filled { border-style: solid; border-color: var(--line); background: var(--panel); }
+.tl-slot.filled.ok { border-color: rgba(125, 168, 122, 0.5); }
+.tl-slot.filled.wrong { border-color: rgba(192, 85, 74, 0.55); }
+.tl-card {
+  flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 8px 12px;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 6px; cursor: grab; position: relative;
+}
+.tl-card.dragging { opacity: 0.4; }
+.tl-card .tc-time { color: var(--gold); font-size: 12px; font-weight: 700; letter-spacing: 1px; }
+.tl-card .tc-time.unknown { color: var(--ink-faint); font-weight: 500; letter-spacing: 0; }
+.tl-card .tc-time.ok { animation: timeReveal 0.6s ease; }
+.tl-card .tc-clue { font-size: 11px; color: var(--gold); margin-top: 5px; line-height: 1.5; }
+@keyframes timeReveal { 0% { opacity: 0; transform: translateY(-4px); } 100% { opacity: 1; transform: none; } }
+.tl-card .tc-desc { font-size: 13px; color: var(--ink); }
+.tl-card .tc-actions { display: flex; gap: 6px; margin-top: 6px; }
+.tl-card .tc-actions button { background: transparent; border: none; color: var(--ink-faint); font-size: 11px; padding: 0; }
+.tl-card .tc-actions button:hover { color: var(--gold); }
+.tl-card .tc-archs { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
+.tl-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.tl-pool .tl-card { cursor: grab; }
+.dragover { border-color: var(--gold) !important; background: rgba(201, 162, 39, 0.06) !important; }
+
+/* ---------- 审讯室 ---------- */
+.suspect-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.suspect-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; text-align: center; cursor: pointer;
+  transition: border-color 0.15s, transform 0.12s;
+}
+.suspect-card:hover:not(.locked) { border-color: var(--gold-dim); transform: translateY(-2px); }
+.suspect-card .avatar { width: 72px; height: 72px; margin: 0 auto 10px; border-radius: 50%; overflow: hidden; border: 2px solid var(--line); background: var(--bg2); }
+.suspect-card h3 { font-size: 16px; color: #efe9da; letter-spacing: 1px; }
+.suspect-card .sus-role { font-size: 12px; color: var(--ink-dim); margin-top: 2px; }
+.suspect-card .sus-status { margin-top: 10px; font-size: 12px; color: var(--ink-faint); }
+.suspect-card .sus-status.cleared { color: var(--green); }
+.suspect-card .sus-status.confessed { color: var(--red); }
+.suspect-card.locked { opacity: 0.55; cursor: not-allowed; }
+.suspect-card.locked .lock-tip { color: var(--ink-faint); font-size: 12px; margin-top: 8px; }
+.suspect-card .chain-dots { margin-top: 8px; display: flex; gap: 5px; justify-content: center; }
+.suspect-card .chain-dots .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.suspect-card .chain-dots .dot.done { background: var(--gold); }
+
+/* 审讯对话 */
+#interrogation-view { max-width: 860px; margin: 0 auto; }
+.iv-head { display: flex; gap: 16px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.iv-head .avatar { width: 56px; height: 56px; border-radius: 50%; overflow: hidden; border: 2px solid var(--gold-dim); background: var(--bg2); flex: 0 0 56px; }
+.iv-head .iv-name { font-size: 16px; font-weight: 700; color: #efe9da; }
+.iv-head .iv-role { font-size: 12px; color: var(--ink-dim); }
+.iv-head .iv-status { margin-left: auto; font-size: 12px; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--ink-dim); }
+.iv-head .iv-status.平静 { color: var(--green); border-color: rgba(125, 168, 122, 0.5); }
+.iv-head .iv-status.动摇 { color: var(--gold); border-color: rgba(201, 162, 39, 0.5); }
+.iv-head .iv-status.崩溃 { color: var(--red); border-color: rgba(192, 85, 74, 0.5); }
+.iv-head .iv-turn { font-size: 12px; color: var(--ink-faint); }
+.iv-chain { font-size: 12px; color: var(--ink-dim); }
+.iv-chain b { color: var(--gold); }
+
+#chat-log {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  min-height: 380px; max-height: 46vh; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.msg { display: flex; gap: 10px; }
+.msg .who { flex: 0 0 52px; font-size: 12px; color: var(--ink-faint); text-align: right; padding-top: 4px; }
+.msg .bubble {
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 13px; font-size: 14px; max-width: 78%; white-space: pre-wrap;
+}
+.msg.player { flex-direction: row-reverse; }
+.msg.player .bubble { background: rgba(201, 162, 39, 0.1); border-color: var(--gold-dim); }
+.msg.system .bubble { background: transparent; border-style: dashed; color: var(--ink-dim); font-size: 13px; }
+.msg.evidence .bubble { background: rgba(192, 85, 74, 0.12); border-color: rgba(192, 85, 74, 0.5); }
+.msg .typing { color: var(--ink-faint); font-size: 13px; padding: 6px 2px; }
+
+#chat-input-bar { display: flex; gap: 8px; margin-top: 12px; align-items: stretch; }
+#chat-input-bar input {
+  flex: 1; background: var(--bg2); border: 1px solid var(--line); color: var(--ink);
+  padding: 10px 14px; border-radius: 8px; font-size: 14px;
+}
+#chat-input-bar input:focus { outline: none; border-color: var(--gold-dim); }
+#chat-input-bar .btn { border-radius: 8px; }
+.quick-asks { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+.quick-asks button { background: var(--panel); border: 1px solid var(--line); color: var(--ink-dim); font-size: 12px; padding: 4px 10px; border-radius: 999px; }
+.quick-asks button:hover { color: var(--gold); border-color: var(--gold-dim); }
+.iv-exit { margin-top: 12px; color: var(--ink-faint); font-size: 12px; text-align: center; }
+.iv-exit button { background: none; border: none; color: var(--ink-dim); font-size: 12px; text-decoration: underline; }
+
+/* 证据弹窗 */
+.modal-mask {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.modal {
+  background: var(--bg2); border: 1px solid var(--line); border-radius: 12px;
+  width: min(680px, 100%); max-height: 78vh; display: flex; flex-direction: column; box-shadow: var(--shadow);
+}
+.modal-sm { width: min(380px, 100%); }
+.modal-head { display: flex; align-items: center; padding: 14px 18px; border-bottom: 1px solid var(--line); }
+.modal-head h3 { font-size: 15px; letter-spacing: 1px; }
+.modal-head .close { margin-left: auto; background: none; border: none; color: var(--ink-dim); font-size: 20px; }
+.modal-body { padding: 14px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+.ev-item {
+  display: flex; gap: 10px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 12px; cursor: pointer;
+}
+.ev-item:hover { border-color: var(--gold-dim); }
+.ev-item .ev-id { font-size: 11px; color: var(--ink-faint); flex: 0 0 74px; padding-top: 2px; }
+.ev-item .ev-text { font-size: 13px; flex: 1; }
+.ev-item .ev-hit { font-size: 11px; color: var(--gold); flex: 0 0 auto; align-self: center; }
+
+/* ---------- 提交结论 ---------- */
+.vq { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin-bottom: 14px; }
+.vq h3 { font-size: 15px; color: var(--gold); letter-spacing: 1px; margin-bottom: 12px; }
+.vq .opts { display: flex; flex-direction: column; gap: 8px; }
+.vq .opt {
+  display: flex; align-items: center; gap: 10px; background: var(--panel2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 14px;
+}
+.vq .opt:hover { border-color: var(--gold-dim); }
+.vq .opt.selected { border-color: var(--gold); background: rgba(201, 162, 39, 0.08); }
+.vq .opt .radio { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ink-faint); flex: 0 0 16px; }
+.vq .opt.selected .radio { border-color: var(--gold); background: radial-gradient(circle, var(--gold) 45%, transparent 50%); }
+.vq .opt .opt-note { margin-left: auto; font-size: 11px; color: var(--ink-faint); }
+
+#verdict-result { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-top: 16px; }
+#verdict-result.show { display: block; }
+#verdict-result .grade { font-size: 40px; font-weight: 800; color: var(--gold); text-align: center; }
+#verdict-result .score-line { text-align: center; color: var(--ink-dim); font-size: 14px; margin-top: 4px; }
+#verdict-result .truth { margin-top: 16px; background: var(--bg2); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; font-size: 13px; }
+#verdict-result .truth h4 { color: var(--gold); margin-bottom: 8px; letter-spacing: 1px; }
+#verdict-result .truth li { margin-left: 18px; }
+
+/* ---------- 设置弹窗 ---------- */
+.set-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.set-row label { font-size: 12px; color: var(--ink-dim); }
+.set-row input, .set-row select {
+  background: var(--bg); border: 1px solid var(--line); color: var(--ink);
+  padding: 8px 12px; border-radius: 6px; font-size: 13px;
+}
+.set-row .help { font-size: 11px; color: var(--ink-faint); }
+.set-note { font-size: 12px; color: var(--ink-dim); border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
+.set-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; }
+
+/* ---------- 引导 ---------- */
+#guide { display: none; }
+#guide.show { display: flex; }
+.guide-step { font-size: 14px; color: var(--ink); margin-bottom: 8px; }
+.guide-step b { color: var(--gold); }
+
+/* ---------- 底部提示 ---------- */
+.footer-note { text-align: center; color: var(--ink-faint); font-size: 11px; padding: 24px 0 10px; }
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+  #topbar nav button { padding: 6px 10px; font-size: 12px; }
+  .arch-grid { grid-template-columns: 1fr; }
+  .msg .bubble { max-width: 86%; }
+  .filter-bar input[type="search"] { width: 100%; margin-left: 0; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ===== 封面 ===== -->
+<div id="cover">
+  <button class="btn-gear cover-gear" id="cover-gear" title="设置">⚙</button>
+  <div class="case-tag">CASE FILE 001 · 档案卷宗</div>
+  <h1>疑案卷宗</h1>
+  <div class="sub">码头仓库疑案</div>
+  <div class="brief">
+    <b>案件概要</b><br>
+    <span id="cover-brief"></span>
+  </div>
+  <button class="btn-start" id="btn-start">开始调查</button>
+  <div class="hint">建议电脑浏览器游玩 · 支持存档 · 详见右上角设置</div>
+</div>
+
+<!-- ===== 顶栏 ===== -->
+<div id="topbar" style="display:none">
+  <div class="brand">疑案卷宗</div>
+  <nav id="nav">
+    <button data-view="archives" class="active">📁 档案室</button>
+    <button data-view="timeline">🕐 时间线</button>
+    <button data-view="interrogation" id="nav-interrogation">🗣 审讯室</button>
+    <button data-view="verdict">⚖️ 提交结论</button>
+  </nav>
+  <div class="progress" id="top-progress"></div>
+  <button class="btn-gear" id="btn-gear" title="设置">⚙</button>
+</div>
+
+<!-- ===== 主区 ===== -->
+<main id="main" style="display:none">
+
+  <!-- 档案室 -->
+  <section class="view active" id="view-archives">
+    <div class="page-head">
+      <h2>档案室</h2>
+      <p>翻阅案件档案，寻找矛盾与突破口。已读档案可在审讯中作为证据出示。</p>
+    </div>
+    <div class="filter-bar">
+      <button data-filter="全部" class="active">全部</button>
+      <button data-filter="物证">物证</button>
+      <button data-filter="证词">证词</button>
+      <button data-filter="报告">报告</button>
+      <button data-filter="影像">影像</button>
+      <input type="search" id="arch-search" placeholder="搜索档案内容…">
+    </div>
+    <div class="arch-grid" id="arch-grid"></div>
+  </section>
+
+  <!-- 时间线 -->
+  <section class="view" id="view-timeline">
+    <div class="page-head">
+      <h2>时间线</h2>
+      <p>事件卡不显示时间——所有时间线索都藏在档案里。先回档案室读档案，找出每个事件的发生时间，再按先后排入时间轴。</p>
+    </div>
+    <div class="tl-toolbar">
+      <span class="tl-hint" id="tl-hint">点击事件卡放入时间轴。排完后提交校验，错误位置会给出档案线索。</span>
+      <span class="tl-stats" id="tl-stats"></span>
+      <button class="btn" id="tl-check">提交校验</button>
+      <button class="btn" id="tl-clear">清空</button>
+    </div>
+    <div class="tl-board" id="tl-board"></div>
+    <div class="tl-pool" id="tl-pool"></div>
+  </section>
+
+  <!-- 审讯室 -->
+  <section class="view" id="view-interrogation">
+    <div class="page-head">
+      <h2>审讯室</h2>
+      <p>排对时间线事件可解锁嫌疑人传唤。自由提问，用档案击破谎言。</p>
+    </div>
+    <div class="suspect-grid" id="suspect-grid"></div>
+
+    <div id="interrogation-view" style="display:none">
+      <div class="iv-head">
+        <div class="avatar" id="iv-avatar"></div>
+        <div>
+          <div class="iv-name" id="iv-name"></div>
+          <div class="iv-role" id="iv-role"></div>
+          <div class="iv-chain" id="iv-chain"></div>
+        </div>
+        <div class="iv-status" id="iv-status">平静</div>
+        <div class="iv-turn" id="iv-turn"></div>
+      </div>
+      <div id="chat-log"></div>
+      <div id="chat-input-bar">
+        <input id="chat-input" placeholder="输入要问的话…（回车发送）" autocomplete="off">
+        <button class="btn" id="btn-evidence">📎 出示证据</button>
+        <button class="btn primary" id="btn-send">发送</button>
+      </div>
+      <div class="quick-asks" id="quick-asks"></div>
+      <div class="iv-exit"><button id="btn-exit-iv">← 返回嫌疑人列表</button></div>
+    </div>
+  </section>
+
+  <!-- 提交结论 -->
+  <section class="view" id="view-verdict">
+    <div class="page-head">
+      <h2>提交结论</h2>
+      <p>基于你的推理，提交最终判定。系统将按真相比对评分。</p>
+    </div>
+    <div class="vq" id="vq-murderer">
+      <h3>一、凶手是谁？</h3>
+      <div class="opts" id="opts-murderer"></div>
+    </div>
+    <div class="vq" id="vq-motive">
+      <h3>二、作案动机？</h3>
+      <div class="opts" id="opts-motive"></div>
+    </div>
+    <div class="vq" id="vq-method">
+      <h3>三、作案手法？</h3>
+      <div class="opts" id="opts-method"></div>
+    </div>
+    <button class="btn primary" id="btn-submit-verdict" style="width:100%;padding:13px;font-size:15px">提交最终结论</button>
+    <div id="verdict-result"></div>
+  </section>
+
+</main>
+
+<div class="footer-note" style="display:none" id="footer-note">《疑案卷宗》MVP · 单人网页推理游戏 · 案件数据为虚构创作</div>
+
+<!-- ===== 证据选择弹窗 ===== -->
+<div class="modal-mask" id="modal-evidence" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>出示证据（选择一份已读档案）</h3>
+      <button class="close" id="modal-evidence-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-evidence-body"></div>
+  </div>
+</div>
+
+<!-- ===== 设置弹窗 ===== -->
+<div class="modal-mask" id="modal-settings" style="display:none">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>设置 · AI 审讯引擎</h3>
+      <button class="close" id="modal-settings-close">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="set-row">
+        <label>审讯模式</label>
+        <select id="set-mode">
+          <option value="demo">演示模式（内置AI，无需Key，开箱即玩）</option>
+          <option value="llm">LLM 模式（自由问答，需 API Key）</option>
+        </select>
+        <span class="help">演示模式使用预置台词引擎，体验完整案件与证据链；LLM 模式由大模型实时作答。</span>
+      </div>
+      <div id="set-llm-fields">
+        <div class="set-row">
+          <label>API Base URL</label>
+          <input id="set-baseurl" placeholder="https://api.siliconflow.cn/v1/chat/completions">
+        </div>
+        <div class="set-row">
+          <label>API Key</label>
+          <input id="set-apikey" type="password" placeholder="sk-…">
+          <span class="help">已预填 SiliconFlow Key（本机默认可用）。Key 仅保存在本地浏览器（localStorage），不上传任何服务器。比赛/公开环境建议使用演示模式。</span>
+        </div>
+        <div class="set-row">
+          <label>模型名称</label>
+          <input id="set-model" placeholder="deepseek-ai/DeepSeek-R1-0528-Qwen3-8B">
+        </div>
+      </div>
+      <div class="set-note">提示：Key 直连仅供个人本机游玩。若需公开展示，请自行部署后端代理（见 README）。</div>
+      <div class="set-actions">
+        <button class="btn" id="set-reset-save">重置存档</button>
+        <button class="btn primary" id="set-save">保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 确认弹窗（替代原生 confirm，兼容内嵌 webview） ===== -->
+<div class="modal-mask" id="modal-confirm" style="display:none">
+  <div class="modal modal-sm">
+    <div class="modal-head">
+      <h3 id="confirm-title">确认</h3>
+      <button class="close" id="modal-confirm-close">×</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-text" style="line-height:1.7"></p>
+    </div>
+    <div class="set-actions" style="padding:0 18px 16px">
+      <button class="btn" id="confirm-cancel">取消</button>
+      <button class="btn primary" id="confirm-ok">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 引导弹窗 ===== -->
+<div class="modal-mask" id="guide">
+  <div class="modal">
+    <div class="modal-head"><h3>操作引导</h3></div>
+    <div class="modal-body">
+      <div class="guide-step">1. <b>档案室</b>：翻阅 30 份档案，注意时间提示与人物指向，寻找互相矛盾的说辞。</div>
+      <div class="guide-step">2. <b>时间线</b>：事件卡不标注时间，需从档案中寻找时间依据推断先后，排对后时间才会揭示。排对事件可解锁嫌疑人传唤资格。</div>
+      <div class="guide-step">3. <b>审讯室</b>：自由提问嫌疑人。出示已读档案可触发"证据击破"，强制其动摇甚至崩溃。</div>
+      <div class="guide-step">4. <b>提交结论</b>：凶手 + 动机 + 手法三项全对即可破案。</div>
+      <div class="guide-step" style="color:var(--ink-faint)">进度自动保存在本浏览器。右上角⚙可切换演示/LLM模式。</div>
+    </div>
+    <div class="set-actions" style="padding:0 18px 16px"><button class="btn primary" id="guide-close">开始</button></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ * 《疑案卷宗》MVP —— 案件数据（case_001 码头仓库疑案）
+ * 数据来源：《案件数据总览.md》（2026-09-16）
+ * 说明：游戏内不直接显示 is_fake 字段，由玩家自行推理发现。
+ * 设计原则：档案内容不直接写绝对时间戳（除少数锚点），
+ *   时间需玩家组合多个档案推理得出。
+ * ============================================================ */
+const CASE = {
+  id: "case_001",
+  title: "码头仓库疑案",
+  subtitle: "城东码头三号仓库 · 2026年9月3日清晨",
+  brief:
+    "2026年9月3日清晨，城东码头三号仓库的装卸工发现老板周海平倒在货堆之间，头部有钝器击打伤。" +
+    "仓库内监控在案发时段故障，只留下进出记录。你受雇整理档案、拼出时间线，并审问三名嫌疑人。",
+  truth: {
+    murderer: "王建国",
+    murdererLabel: "王建国（王叔）",
+    motive: "货款纠纷",
+    motiveLabel: "8万元货款纠纷，讨债冲突升级",
+    method: "铁撬棍",
+    methodLabel: "用仓库铁撬棍击打头部",
+    story:
+      "9月2日晚，周海平约王叔在翠湖饭店吃饭，承诺下周一还8万货款，但席间言语羞辱王叔。" +
+      "饭后周海平独自回仓库理货。王叔回家后越想越气，开车出门抵达仓库后门，进仓与周海平再次争执，" +
+      "用铁撬棍击打其头部致死，擦净凶器后驾车离开。",
+  },
+
+  /* ---------- 时间线事件（12 条，correctOrder 为正确排序） ----------
+   * hintArchs: 该事件时间依据的档案 id（事件卡不显示时间，玩家需读这些档案推理）
+   */
+  events: [
+    { id: "ev_001", time: "19:40", desc: "周海平与王叔在翠湖饭店共进晚餐", correctOrder: 1, unlocks: null, hintArchs: ["arch_024", "arch_002"] },
+    { id: "ev_002", time: "20:50", desc: "李姐因货物堆放违规与周海平在办公室争吵", correctOrder: 2, unlocks: null, hintArchs: ["arch_003", "arch_028"] },
+    { id: "ev_003", time: "21:00", desc: "周海平独自进入三号仓库", correctOrder: 3, unlocks: "王建国", hintArchs: ["arch_004", "arch_028"] },
+    { id: "ev_004", time: "21:05", desc: "李姐折返仓库办公室取落下的钥匙", correctOrder: 4, unlocks: null, hintArchs: ["arch_005", "arch_003"] },
+    { id: "ev_005", time: "21:10", desc: "李姐离开仓库", correctOrder: 5, unlocks: "李慧敏", hintArchs: ["arch_005"] },
+    { id: "ev_006", time: "21:15", desc: "王叔从家中开车出门", correctOrder: 6, unlocks: null, hintArchs: ["arch_027", "arch_017", "arch_008"] },
+    { id: "ev_007", time: "21:25", desc: "王叔的车停在仓库后门", correctOrder: 7, unlocks: null, hintArchs: ["arch_014", "arch_006"] },
+    { id: "ev_008", time: "21:28", desc: "王叔进入三号仓库", correctOrder: 8, unlocks: null, hintArchs: ["arch_014", "arch_023"] },
+    { id: "ev_009", time: "21:32", desc: "王叔用铁撬棍击打周海平头部", correctOrder: 9, unlocks: null, hintArchs: ["arch_010", "arch_018", "arch_023"] },
+    { id: "ev_010", time: "21:35", desc: "王叔擦净凶器后驾车离开仓库", correctOrder: 10, unlocks: "陈晓东", hintArchs: ["arch_015", "arch_023"] },
+    { id: "ev_011", time: "22:10", desc: "小陈发短信向周海平讨要工资", correctOrder: 11, unlocks: null, hintArchs: ["arch_019", "arch_013", "arch_026"] },
+    { id: "ev_012", time: "次日08:00", desc: "装卸工发现周海平尸体并报警", correctOrder: 12, unlocks: null, hintArchs: [] },
+  ],
+
+  /* ---------- 档案（30 条） ----------
+   * type: 物证 | 证词 | 报告 | 影像
+   * lockedBy: 需要击破某嫌疑人某级证据链才解锁（null = 初始可见）
+   * 时间推理设计：
+   *   - 仓库监控时间戳故障（见 arch_028），只拍人物与动作
+   *   - 证词用相对描述（下班后、打牌中途、约几分钟）
+   *   - 锚点档案（含绝对时间）：arch_024 饭店监控 20:20、arch_010 验尸 21:00-22:00、arch_013 火车票
+   */
+  archives: [
+    // —— 物证（9 条）——
+    { id: "arch_001", type: "物证", content: "翠湖饭店晚餐收据：两人份，共156元，桌号A7", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_009", type: "物证", content: "周海平手机通话记录：案发当晚拨给王叔一次未接，时长0秒", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_011", type: "物证", content: "凶器鉴定：货堆旁铁撬棍，长60cm，表面新鲜擦拭痕迹，棍头残留微量血迹（与死者血型一致）", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_013", type: "物证", content: "小陈火车票：城东站出发，到达临江市（距城东约200公里），车程约2小时50分", timeHint: "18:40-21:30", person: "小陈", isFake: false, lockedBy: null },
+    { id: "arch_016", type: "物证", content: "仓库后门脚印勘验：案发时段后42码运动鞋印，与王叔鞋码吻合（李姐37码、小陈43码不符）", timeHint: "—", person: "王叔", isFake: false, lockedBy: { suspect: "王建国", level: 3 } },
+    { id: "arch_019", type: "物证", content: "周海平手机短信：小陈发来“叔，工资什么时候发？我这边房租要到期了。”状态：已发送未读", timeHint: "—", person: "小陈", isFake: false, lockedBy: null },
+    { id: "arch_021", type: "物证", content: "仓库办公室钥匙登记表：李姐名下保管一把三号仓库钥匙，案发当日无借出归还异常", timeHint: "—", person: "李姐", isFake: false, lockedBy: { suspect: "李慧敏", level: 1 } },
+    { id: "arch_023", type: "物证", content: "王叔轿车行车记录仪：记录显示从家中出发→抵达城东码头→停留约十分钟→离开→返回小区；其中抵达码头后约三分钟起、持续约六分钟的画面被手指遮挡", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_026", type: "物证", content: "周海平手机定位：案发当晚进入三号仓库范围后不再移动", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+
+    // —— 证词（12 条）——
+    { id: "arch_002", type: "证词", content: "翠湖饭店服务员：A7桌两位中年男子吃饭约四十分钟，离开时个子较高那位（王叔）脸色很难看", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_003", type: "证词", content: "李姐首次证词：下班后跟他吵了一架，他骂我把货堆得挡了过道。我气走了，走了才发现钥匙落办公室，折回去取了一趟，取完就走了，之后没再回去", timeHint: "—", person: "李姐", isFake: false, lockedBy: null },
+    { id: "arch_006", type: "证词", content: "装卸工赵强：当晚看到三号仓库后门停了辆黑色轿车，车灯亮着没熄火，过了一会儿才走", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_007", type: "证词", content: "王叔首次证词：9月2日晚在老赵家打牌，一直在；最近没见过周海平", timeHint: "—", person: "王叔", isFake: true, lockedBy: null },
+    { id: "arch_008", type: "证词", content: "老赵证词：王叔来打牌，中途说肚子不舒服出去透气，走了挺久才回来", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_012", type: "证词", content: "小陈证词：周海平侄子，打零工；当晚发过短信催工资；人当天在外地没去过仓库", timeHint: "—", person: "小陈", isFake: false, lockedBy: null },
+    { id: "arch_017", type: "证词", content: "王叔妻子：丈夫当晚说出去打牌，出门挺晚的，回来也快半夜了；外套袖口有深色污渍，他说是蹭的茶水", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_020", type: "证词", content: "李姐补充证词：钥匙是下班后发现落办公室，折回去取，与首次证词一致", timeHint: "—", person: "李姐", isFake: false, lockedBy: null },
+    { id: "arch_022", type: "证词", content: "王叔第二次证词：“我说了那天在打牌。什么收据？我不知道。”（语气明显紧张）", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_027", type: "证词", content: "邻居王婶：当晚遛狗看到老王开车出去，平时很少这么晚出门", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_028", type: "证词", content: "仓库安保员：三号仓库前门当晚只有周老板和李姐刷卡进出；后门不刷卡谁都能进；当晚仓库监控画面的时间戳区域正好故障，只能看清人物和动作；仓库规定20:30下班锁门", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_029", type: "证词", content: "装卸工小刘：周老板欠王老板8万货款全仓库都知道；上个月王老板来吵得很凶，说“再不还就法庭见”", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+
+    // —— 报告（4 条）——
+    { id: "arch_010", type: "报告", content: "验尸报告：左颞部一处钝器击打伤，颅骨骨折，颅内出血致死；死亡时间推断当晚21:00-22:00", timeHint: "21:00-22:00", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_018", type: "报告", content: "现场勘验：货堆区发现拖拽痕迹，死者倒伏位置与第一案发现场不一致，疑似被移动；照明灯案发时段有电压波动", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_025", type: "报告", content: "指纹报告：铁撬棍上未检出有效指纹（被擦拭），棍身凹痕内检出微量皮肤组织，DNA比对中", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_030", type: "报告", content: "DNA比对结果：铁撬棍凹痕内皮肤组织与王叔DNA匹配度99.99%", timeHint: "—", person: "王叔", isFake: false, lockedBy: { suspect: "王建国", level: 4 } },
+
+    // —— 影像（5 条，仓库监控时间戳故障，仅描述画面）——
+    { id: "arch_004", type: "影像", content: "仓库正门监控：周海平独自刷卡进入三号仓库，手持手机", timeHint: "—", person: "周海平", isFake: false, lockedBy: null },
+    { id: "arch_005", type: "影像", content: "仓库正门监控：李姐刷卡进入，约几分钟后刷卡离开，手持钥匙串", timeHint: "—", person: "李姐", isFake: false, lockedBy: null },
+    { id: "arch_014", type: "影像", content: "仓库后门监控：黑色轿车停后门，驾驶员下车，身形壮实，穿深色外套", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_015", type: "影像", content: "仓库后门监控：同一辆黑色轿车从后门驶离，车灯熄灭行驶", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_024", type: "影像", content: "翠湖饭店门口监控：王叔与周海平前后脚走出饭店，周海平上车离开，王叔门口站约两分钟，表情阴沉", timeHint: "20:20", person: "王叔", isFake: false, lockedBy: null },
+  ],
+
+  /* ---------- 嫌疑人（3 名） ---------- */
+  suspects: {
+    王建国: {
+      id: "王建国", name: "王建国", alias: "王叔", age: "51岁", role: "周海平的生意伙伴，长期客户",
+      avatar: { face: "m", hair: "#3d3a36", skin: "#d9a06b" },
+      unlockAt: 3, // 排对 ≥3 个事件解锁审讯
+      intro: "你就是来查老周那事的人？行，想问什么赶紧问，我下午还约了人。",
+      info: "我叫王建国，他们叫我老王。跟老周做了快十年生意，他一直从我这儿拿货。",
+      // 谎言清单（演示 AI 与 LLM 角色卡共用）
+      lies: [
+        { topic: "打牌", text: "9月2日晚上我在老赵家打牌，20:30到23:00一直在，老赵能作证。" },
+        { topic: "见面", text: "我最近没跟周海平见过面，生意上的事都是电话说。" },
+        { topic: "货款", text: "货款？我不知道什么货款的事。" },
+        { topic: "仓库", text: "我没去过仓库，那天晚上我根本没出门。" },
+      ],
+      // 可主动承认
+      admits: [
+        "周海平是欠我钱，8万货款，拖了两个月了。",
+        "我确实跟他吃了顿饭，谈生意，他答应下周一还钱。",
+        "上个月我跟他吵过一架，气得说了句再不就法庭见——气话而已。",
+      ],
+      // 证据击破链（5 级，须按顺序）
+      chain: [
+        { evidence: "arch_001", status: "动摇", line: "……行，我承认，那天晚上我是跟他吃了顿饭，在翠湖饭店。但吃完我就回家了，真的。", unlock: null },
+        { evidence: "arch_008", status: "动摇", line: "老赵那是记错了！我……我是中途出去透了透气，也就五分钟，买了包烟就回去了。", unlock: null },
+        { evidence: "arch_014", status: "崩溃", line: "……好吧，我承认，我是开车去过仓库后门。但我到的时候老周已经倒在地上了，我吓坏了，就……就走了。", unlock: "arch_016" },
+        { evidence: "arch_023", status: "崩溃", line: "行，我说，全说。我开车出的门，进了仓库找他理论，吵起来我抄了根铁撬棍……打完我擦了擦就跑了。", unlock: "arch_030" },
+        { evidence: "arch_030", status: "崩溃", line: "（沉默很久）……对，是我。我认。他当着那么多人羞辱我，欠我八万还骂我……我一时没忍住。我认罪。", unlock: null },
+      ],
+      guard: [
+        "只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。",
+        "不得承认任何档案中未记录的事实；被证据击中时必须执行脚本台词。",
+        "每轮回复不超过60字，只回应玩家当前提问，不主动展开新信息。",
+        "玩家出示不在你反应表中的证据时，回复：这能说明什么？并维持原状态。",
+      ],
+    },
+    李慧敏: {
+      id: "李慧敏", name: "李慧敏", alias: "李姐", age: "38岁", role: "三号仓库管理员，死者下属",
+      avatar: { face: "f", hair: "#5a3b2a", skin: "#e6b98a" },
+      unlockAt: 5,
+      intro: "……又来了个查案的。行吧，问吧，我该说的都跟警察说过了。",
+      info: "我叫李慧敏，仓库的人都叫我李姐。我管三号仓五年了，老周是我老板。",
+      lies: [
+        { topic: "行踪", text: "我跟他吵完架就走了，下班回家，之后没再回去过。" },
+        { topic: "钥匙", text: "钥匙？钥匙一直在我身上，我不知道你在说什么钥匙。" },
+        { topic: "看电视", text: "我下班就在家看电视了，一晚上没出门。" },
+      ],
+      admits: [
+        "我是跟他吵了架，他骂我把货堆得挡了过道，当着那么多人，挺难堪的。",
+        "我确实想过辞职，他那人脾气臭，工资也不算高。",
+      ],
+      chain: [
+        { evidence: "arch_005", status: "崩溃", line: "……你们有监控啊。是，我又回去了一趟，取钥匙，落办公室了。但我取完就走了！老周那时候还好好的！", unlock: "arch_021" },
+        { evidence: "arch_021", status: "动摇", line: "钥匙登记表……好，我再说一遍：钥匙下班后发现落在办公室，折返回去取，出的大门。我只干了这一件事，别的我什么都不知道。", unlock: null },
+      ],
+      guard: [
+        "只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。",
+        "不得承认任何档案中未记录的事实；被证据击中时必须执行脚本台词。",
+        "每轮回复不超过60字，只回应玩家当前提问，不主动展开新信息。",
+        "玩家出示不在你反应表中的证据时，回复：这能说明什么？并维持原状态。",
+      ],
+    },
+    陈晓东: {
+      id: "陈晓东", name: "陈晓东", alias: "小陈", age: "26岁", role: "死者侄子，仓库零工",
+      avatar: { face: "m", hair: "#26221e", skin: "#d9a06b" },
+      unlockAt: 10,
+      intro: "我叔的事……你们找上我了？行，问吧，我坦坦荡荡。",
+      info: "我叫陈晓东，老周是我叔，我在他仓库打零工，工资按天结。",
+      lies: [
+        { topic: "行踪", text: "我那天下午就去临江了，一直在那边，到第二天早上才回来。" },
+        { topic: "关系", text: "我跟叔叔关系还行吧，他是我亲叔，能差到哪去。" },
+      ],
+      admits: [
+        "他是欠我一个月工资，我发过牢骚，也说过气话。",
+        "我是给他发了条短信，催工资，房租要到期了。",
+        "我坐火车去的临江，车票你们可以查。",
+      ],
+      chain: [
+        { evidence: "arch_013", status: "平静", line: "（把车票拍在桌上）你们查啊，城东站出发到的临江，200公里外。我拿什么来杀人？", unlock: null },
+        { evidence: "arch_019", status: "动摇", line: "……短信是我发的。我是有怨气，他拖我工资拖了一个月。但发短信的时候我人在临江，火车票就是证据。", unlock: null },
+      ],
+      guard: [
+        "只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。",
+        "不得承认任何档案中未记录的事实；被证据击中时必须执行脚本台词。",
+        "每轮回复不超过60字，只回应玩家当前提问，不主动展开新信息。",
+        "玩家出示不在你反应表中的证据时，回复：这能说明什么？并维持原状态。",
+      ],
+    },
+  },
+
+  /* ---------- 结论选项 ---------- */
+  verdict: {
+    murderers: [
+      { id: "王建国", label: "王建国（王叔）· 生意伙伴" },
+      { id: "李慧敏", label: "李慧敏（李姐）· 仓库管理员" },
+      { id: "陈晓东", label: "陈晓东（小陈）· 死者侄子" },
+    ],
+    motives: [
+      { id: "货款纠纷", label: "8万元货款纠纷" },
+      { id: "工作矛盾", label: "货物堆放引发的职场矛盾" },
+      { id: "讨薪怨气", label: "被拖欠工资的怨气" },
+    ],
+    methods: [
+      { id: "铁撬棍", label: "铁撬棍击打头部" },
+      { id: "推搡撞击", label: "推搡致其撞上货堆" },
+      { id: "拖拽致伤", label: "拖拽搬运致其受伤" },
+    ],
+  },
+};
+
+/* 快速索引 */
+CASE.eventsById = {};
+CASE.archById = {};
+CASE.events.forEach((e) => (CASE.eventsById[e.id] = e));
+CASE.archives.forEach((a) => (CASE.archById[a.id] = a));
+
+if (typeof module !== "undefined") module.exports = { CASE };
+
+</script>
+<script>
+/* ============================================================
+ * 《疑案卷宗》演示模式 AI —— 预置台词引擎
+ * 无需 API Key 即可完整游玩；证据链命中时强制执行脚本台词。
+ * ============================================================ */
+/* 环境适配：浏览器直接引用 data.js 的全局 CASE；Node 测试时挂载 global */
+if (typeof window === "undefined") { global.CASE = require("./data.js").CASE; }
+
+const DEMO_AI = {
+  /**
+   * 生成嫌疑人回应
+   * @param {string} suspectId 嫌疑人 id（王建国/李慧敏/陈晓东）
+   * @param {string} text 玩家输入
+   * @param {object} state { breakLevel, presented }
+   * @returns {{text:string, status:'平静'|'动摇'|'崩溃', scripted?:boolean}}
+   */
+  respond(suspectId, text, state) {
+    const s = CASE.suspects[suspectId];
+    if (!s) return { text: "……", status: "平静" };
+    const lv = state.breakLevel || 0;
+    const chainLen = s.chain.length;
+    // 全部击破：进入终局陈述
+    if (lv >= chainLen) {
+      return {
+        text: this.final(suspectId, lv),
+        status: "崩溃",
+      };
+    }
+    // 未击破完：按主题匹配
+    const rule = this.matchRules(suspectId, text);
+    if (rule) {
+      const resp = rule.resp(lv, s);
+      return { text: resp.text, status: resp.status || "平静" };
+    }
+    // 兜底
+    return this.fallback(suspectId, text, lv, s);
+  },
+
+  /** 全部击破后的终局台词 */
+  final(suspectId) {
+    if (suspectId === "王建国") {
+      return "（深深低下头，声音发颤）……是我。老周当着那么多人的面羞辱我，欠我八万还骂我没出息……那天在仓库，我本来只想吓唬他。他还在那儿数落我，我就……就抄起了那根铁撬棍。打完我害怕，擦了凶器就跑了。我对不起他，也对不起我自己。";
+    }
+    if (suspectId === "李慧敏") {
+      return "（松了一口气，苦笑）……你看，我21:05折返回去就为了把钥匙拿走，21:10就出大门了。老周出事是21:32，那时候我早到家了。我是跟他吵了架，是恨他骂我，可我胆子还没大到杀人。你查清楚了就好，还我个清白。";
+    }
+    return "（语气平静下来）……对，我对我叔有怨气，工资拖了我一个月，我发短信催他。但我18:40就上了去临江的火车，21:30才到，200公里外，我连现场在哪儿都不知道。我能理解你们怀疑我——可这次真不是我。";
+  },
+
+  /** 主题规则表 */
+  matchRules(suspectId, text) {
+    const rules = DEMO_RULES[suspectId] || [];
+    for (const r of rules) {
+      if (r.keys.some((k) => text.includes(k))) return r;
+    }
+    return null;
+  },
+
+  /** 未命中主题时的兜底回应（轮换，避免重复） */
+  fallback(suspectId, text, lv, s) {
+    if (this.isUnrelated(text)) {
+      return { text: "和案子无关的事我不想聊。", status: "平静" };
+    }
+    const pool = s.fallbackPool || [
+      "你这话我没听明白，你到底想问什么？",
+      "该说的我都说了，你还想让我说什么？",
+      "……你这是在怀疑我？那你拿出证据来。",
+    ];
+    const idx = (text.length + (lv || 0)) % pool.length;
+    return { text: pool[idx], status: lv > 0 ? "动摇" : "平静" };
+  },
+
+  isUnrelated(text) {
+    const legal = [
+      "案", "案件", "案子", "周海平", "老周", "仓库", "时间", "证据", "档案",
+      "审讯", "凶手", "杀人", "杀", "死亡", "尸体", "嫌疑", "不在场", "当晚", "那天",
+      "9月2", "9月3", "晚上", "钥匙", "货款", "工资", "收据", "监控", "证词",
+      "饭店", "翠湖", "打牌", "老赵", "临江", "火车", "短信", "侄子", "叔叔",
+      "认识", "见过", "关系", "争吵", "动机", "手法", "铁撬棍", "DNA", "脚印",
+      "王叔", "李姐", "小陈", "死者", "对不起", "认罪", "行凶", "复仇",
+    ];
+    return !legal.some((k) => text.includes(k));
+  },
+};
+
+/* ============ 各嫌疑人主题规则 ============ */
+const DEMO_RULES = {
+  王建国: [
+    {
+      keys: ["杀人", "凶手", "行凶", "铁撬棍", "打死的", "砸", "动手", "认罪", "是你吧", "杀的", "是不是你", "你干的"],
+      resp: (lv) => {
+        if (lv >= 4) return { text: "……是，我干的。我认。吵起来我没忍住，抄了铁撬棍……", status: "崩溃" };
+        if (lv === 3) return { text: "我、我承认我是去过仓库，可我到的时候他已经倒在地上了！我真的没有打他！", status: "崩溃" };
+        return { text: "你、你胡说什么！我怎么可能杀人！你拿出证据来！", status: "动摇" };
+      },
+    },
+    {
+      keys: ["打牌", "老赵", "20:30", "23:00", "在哪儿", "在哪", "几点", "21:15", "21:25", "21:35", "21:50", "出门", "回家"],
+      resp: (lv) => {
+        if (lv >= 4) return { text: "21:15我开车出的门，21:25到的仓库后门，21:35离开，21:50到家。行车记录仪……你们不是都看到了吗。", status: "崩溃" };
+        if (lv === 3) return { text: "我……21:25我开车到的仓库后门。我承认我去了，但我到的时候老周已经……已经倒下了。", status: "崩溃" };
+        if (lv === 2) return { text: "我说过了，我在老赵家打牌。中途就出去透了透气，买了包烟，五分钟就回去了。", status: "动摇" };
+        if (lv === 1) return { text: "吃了饭我就回家了，在家待着。打牌？哦……那、那晚后来是去老赵家坐了一会儿。", status: "动摇" };
+        return { text: "我在老赵家打牌，20:30到23:00一直在，老赵能给我作证。", status: "平静" };
+      },
+    },
+    {
+      keys: ["仓库", "后门", "码头", "进去"],
+      resp: (lv) => {
+        if (lv >= 4) return { text: "进了，21:28进的仓库，跟他理论，吵起来……后面的事你们知道了。", status: "崩溃" };
+        if (lv === 3) return { text: "……是，我承认，21:25我开车到仓库后门，进去看了一眼。老周已经倒在地上了，我害怕，就跑了。", status: "崩溃" };
+        return { text: "我没去过仓库！那天晚上我根本没出门！", status: "平静" };
+      },
+    },
+    {
+      keys: ["翠湖", "饭店", "收据", "吃饭", "晚餐", "A7"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "……行，我承认，那天晚上我是跟他吃了顿饭，翠湖饭店。谈生意，他说下周一还钱。吃完我就回家了。", status: "动摇" };
+        return { text: "什么收据？我不知道。我最近没跟他见过面，吃什么饭？", status: "平静" };
+      },
+    },
+    {
+      keys: ["货款", "欠", "钱", "8万", "债"],
+      resp: (lv) => {
+        if (lv >= 4) return { text: "他欠我8万，拖了两个月，那天晚上还当面羞辱我……钱的事是导火索，可我动手是错的，我不该动手。", status: "崩溃" };
+        if (lv >= 3) return { text: "他是欠我8万货款。我晚上去找他，本来是想好好说，让他把钱结了……", status: "崩溃" };
+        return { text: "是，他欠我8万货款，拖了俩月了。我是为这个跟他吵过，可不至于杀人吧？", status: "动摇" };
+      },
+    },
+    {
+      keys: ["认识", "见过", "见面", "关系"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "生意伙伴，认识快十年了。那天晚上是见过——吃饭，我承认了。", status: "动摇" };
+        return { text: "生意上的朋友。最近没见过面，都是电话联系。", status: "平静" };
+      },
+    },
+    {
+      keys: ["车", "开车", "行车记录仪", "轿车"],
+      resp: (lv) => {
+        if (lv >= 3) return { text: "……是，那天晚上我是开车出去的，去了仓库后门。你们监控不是都拍到了吗。", status: "崩溃" };
+        return { text: "我那天没开车出门，车一直停楼下。", status: "平静" };
+      },
+    },
+    {
+      keys: ["动机", "为什么", "吵", "羞辱"],
+      resp: (lv) => {
+        if (lv >= 4) return { text: "他当着服务员的面羞辱我，说我穷、说我这点钱也催……我一时上头。我认罪，不找借口。", status: "崩溃" };
+        if (lv >= 3) return { text: "我是恨他，他欠我钱还嘴硬……但我没想杀人，我到的时候人已经倒了！", status: "崩溃" };
+        return { text: "我能有什么动机？他欠我钱我都不跟他计较了。", status: "平静" };
+      },
+    },
+  ],
+
+  李慧敏: [
+    {
+      keys: ["杀人", "凶手", "行凶", "是你吧", "认罪", "杀的", "是不是你", "你干的"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "我杀他？我21:10就出大门了，他21:32才出的事，我拿什么杀？！我就是取了个钥匙！", status: "崩溃" };
+        return { text: "你开什么玩笑！我是跟他吵了架，可不至于杀人吧？", status: "动摇" };
+      },
+    },
+    {
+      keys: ["钥匙", "落", "办公室", "登记表"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "……好，我说实话。钥匙20:55我发现落在办公室了，21:05折返回去取，21:10出的大门。就这么点事，我全说了。", status: "崩溃" };
+        return { text: "钥匙？钥匙一直在我身上，我不知道你在说什么钥匙。", status: "平静" };
+      },
+    },
+    {
+      keys: ["行踪", "回家", "下班", "在哪儿", "在哪", "几点", "电视", "21:00", "21:05", "21:10", "监控", "刷卡", "出去"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "我再说一遍：20:50吵完架，我下班走了。21:05折返回去取钥匙，21:10出大门回家。监控你们也看了，就这么多。", status: "崩溃" };
+        return { text: "我20:50吵完架就走了，回家看电视，一晚上没再出门。", status: "平静" };
+      },
+    },
+    {
+      keys: ["争吵", "骂", "货堆", "违规", "委屈", "辞职"],
+      resp: () => ({ text: "是，他当着那么多人骂我，说我货堆得挡过道，挺难堪的。我是委屈，想过辞职，但也就想想。", status: "平静" }),
+    },
+    {
+      keys: ["动机", "为什么", "恨"],
+      resp: () => ({ text: "恨？不至于。他脾气臭，可工资还是照发的，我犯不着为一句骂去杀人。", status: "平静" }),
+    },
+  ],
+
+  陈晓东: [
+    {
+      keys: ["杀人", "凶手", "行凶", "是你吧", "认罪", "杀的", "是不是你", "你干的"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "我在临江，200公里外，21:30才下的火车！你告诉我我怎么杀的人？", status: "平静" };
+        return { text: "我？我那天下午就去临江了，人根本不在城东！", status: "平静" };
+      },
+    },
+    {
+      keys: ["临江", "火车", "车票", "18:40", "21:30", "行踪", "在哪", "在哪儿", "回来"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "车票不是给你看了吗？18:40城东站出发，21:30到临江，第二天早上才回来。你们去查，我还我清白。", status: "平静" };
+        return { text: "我下午就去临江了，一直在那边，到第二天早上才回来。", status: "平静" };
+      },
+    },
+    {
+      keys: ["关系", "叔叔", "侄子", "亲"],
+      resp: (lv) => {
+        if (lv >= 2) return { text: "……行，我承认，我跟我叔是有怨气。工资拖了一个月，我发过火。可我有怨气不等于我会杀人，对吧？", status: "动摇" };
+        return { text: "他是我亲叔，关系还行吧。他欠我工资是事实，可我也没怎么着啊。", status: "平静" };
+      },
+    },
+    {
+      keys: ["工资", "钱", "短信", "催", "房租", "22:10"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "短信是我发的，22:10，催工资。但那会儿我人在临江，火车票就是证据。", status: "动摇" };
+        return { text: "他欠我一个月工资，我发过短信催过，也说气话。但发短信的时候我人已经在临江了。", status: "平静" };
+      },
+    },
+    {
+      keys: ["动机", "为什么", "恨", "怨"],
+      resp: (lv) => {
+        if (lv >= 1) return { text: "我是有怨气，可我有火车票，人不在场，这总说明问题了吧？", status: "动摇" };
+        return { text: "我没动机。工资拖了就拖了，我又不是第一天打零工。", status: "平静" };
+      },
+    },
+  ],
+};
+
+if (typeof module !== "undefined") module.exports = { DEMO_AI };
+
+</script>
+<script>
+/* ============================================================
+ * 《疑案卷宗》LLM 审讯引擎接入模块
+ * 兼容 OpenAI Chat Completions 协议（SiliconFlow / DeepSeek 等）。
+ * 默认接入 SiliconFlow（deepseek-ai/DeepSeek-R1-0528-Qwen3-8B，浏览器 CORS 已验证可用）。
+ * Key 仅存 localStorage，个人本机使用；参赛打包版已剥离 Key（见 build.js）。
+ * ============================================================ */
+
+const LLM = {
+  DEFAULTS: {
+    mode: "demo",
+    baseUrl: "https://api.siliconflow.cn/v1/chat/completions",
+    apiKey: "" // 参赛版不内置 Key,
+    model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
+  },
+
+  get settings() {
+    try {
+      const raw = localStorage.getItem("anyluo_settings");
+      if (!raw) return { ...this.DEFAULTS };
+      return { ...this.DEFAULTS, ...JSON.parse(raw) };
+    } catch (e) {
+      return { ...this.DEFAULTS };
+    }
+  },
+
+  save(s) {
+    try { localStorage.setItem("anyluo_settings", JSON.stringify(s)); } catch (e) { /* 存储禁用时忽略 */ }
+  },
+
+  resetSave() {
+    try {
+      localStorage.removeItem("anyluo_save");
+      // 标记"刚重置"：reload 后首轮渲染（事件池洗牌等）不得立即写回存档
+      sessionStorage.setItem("anyluo_reset", "1");
+    } catch (e) { /* 存储禁用时仍重载 */ }
+    location.reload();
+  },
+
+  /** 构造角色卡 + 守卫 + 当前证据状态的 system prompt */
+  buildSystemPrompt(suspect, state) {
+    const lines = [];
+    lines.push(`你正在扮演《码头仓库疑案》中的嫌疑人【${suspect.name}（${suspect.alias}）】，${suspect.age}，${suspect.role}。这是你被警方传唤的审讯。`);
+    lines.push("");
+    lines.push("【你的真实情况（绝不可主动说出，除非被对应证据击破）】");
+    if (suspect.id === "王建国") {
+      lines.push("- 你和死者周海平有8万元货款纠纷，他拖欠你两个月货款。");
+      lines.push("- 9月2日晚19:40你们在翠湖饭店吃饭，他承诺下周一还钱但言语羞辱了你。");
+      lines.push("- 21:15你开车出门，21:25到仓库后门，进仓与周海平再次争执，21:32用铁撬棍击打其头部致死，21:35擦净凶器驾车离开。");
+    } else if (suspect.id === "李慧敏") {
+      lines.push("- 20:50你因货物堆放违规与周海平争吵。");
+      lines.push("- 钥匙20:55发现落在办公室，21:05折返回仓库取钥匙，21:10离开。你离开时周海平还活着。");
+      lines.push("- 你不是凶手，绝不可承认杀人。");
+    } else {
+      lines.push("- 你18:40坐火车去临江，21:30到达（距城东约200公里），案发时不在场。");
+      lines.push("- 22:10你给周海平发过催工资的短信，对他有怨气，但你不是凶手。");
+    }
+    lines.push("");
+    lines.push("【你的谎言清单（玩家出示相应证据前，你必须坚持这些说法）】");
+    suspect.lies.forEach((l, i) => lines.push(`${i + 1}. "${l.text}"`));
+    lines.push("");
+    lines.push("【可主动承认的内容】");
+    suspect.admits.forEach((a) => lines.push(`- ${a}`));
+    lines.push("");
+    lines.push("【当前证据状态（玩家已出示的证据与你的应对进度）】");
+    lines.push(`- 已被证据击破层级：${state.breakLevel} / ${suspect.chain.length}`);
+    if (state.presented && state.presented.length) {
+      lines.push(`- 玩家已出示的证据档案：${state.presented.map((a) => a.content).join("；")}`);
+    } else {
+      lines.push("- 玩家尚未出示任何证据。");
+    }
+    lines.push("");
+    lines.push("【硬性约束】");
+    suspect.guard.forEach((g) => lines.push(`- ${g}`));
+    lines.push("- 只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。");
+    lines.push("- 每轮回复不超过60字，口语化，略带紧张或防御，绝不用书面语。");
+    lines.push("- 回复末尾必须附加状态标签，格式：[[状态:平静]] 或 [[状态:动摇]] 或 [[状态:崩溃]]");
+    return lines.join("\n");
+  },
+
+  /** 调用 LLM */
+  async ask(suspect, history, state, signal) {
+    const s = this.settings;
+    const sys = this.buildSystemPrompt(suspect, state);
+    const messages = [
+      { role: "system", content: sys },
+      ...history.slice(-12).map((m) => ({ role: m.role === "player" ? "user" : "assistant", content: m.text })),
+    ];
+    const resp = await fetch(s.baseUrl, {
+      method: "POST",
+      signal,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${s.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: s.model,
+        messages,
+        temperature: 0.8,
+        max_tokens: 200,
+        stream: false,
+      }),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => "");
+      throw new Error(`API ${resp.status}: ${body.slice(0, 120)}`);
+    }
+    const data = await resp.json();
+    let text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || "";
+    // 推理模型（R1 等）的正文可能为空或仅为空白：思维链在 reasoning_content，不可展示给玩家
+    if (!text.trim()) {
+      throw new Error("模型未返回正文（可能仍在思考或超时），请重试。");
+    }
+    // 解析状态标签
+    let status = "平静";
+    const m = text.match(/\[\[状态[:：]\s*(平静|动摇|崩溃)\s*\]\]/);
+    if (m) {
+      status = m[1];
+      text = text.replace(/\[\[状态[:：]\s*(平静|动摇|崩溃)\s*\]\]/g, "").trim();
+    }
+    return { text, status };
+  },
+};
+
+if (typeof module !== "undefined") module.exports = { LLM };
+
+</script>
+<script>
+/* ============================================================
+ * 《疑案卷宗》MVP —— 主逻辑与界面
+ * ============================================================ */
+(() => {
+  "use strict";
+
+  /* ---------------- 工具 ---------------- */
+  const $ = (sel, root) => (root || document).querySelector(sel);
+  const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
+  const el = (tag, cls, text) => {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined && text !== null) n.textContent = text;
+    return n;
+  };
+
+  /* ---------------- 音效（Web Audio 合成） ---------------- */
+  const Sound = {
+    ctx: null,
+    ensure() {
+      if (!this.ctx) {
+        try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { this.ctx = null; }
+      }
+      if (this.ctx && this.ctx.state === "suspended") this.ctx.resume();
+      return this.ctx;
+    },
+    tone(freq, dur, type, gain, delay) {
+      const ctx = this.ensure();
+      if (!ctx) return;
+      const t0 = ctx.currentTime + (delay || 0);
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = type || "sine";
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(gain || 0.05, t0);
+      g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.02);
+    },
+    evidence() { this.tone(880, 0.18, "square", 0.04); this.tone(1320, 0.25, "square", 0.03, 0.09); },
+    shake() { this.tone(620, 0.16, "sine", 0.05); this.tone(540, 0.16, "sine", 0.05, 0.12); this.tone(660, 0.16, "sine", 0.05, 0.24); },
+    crash() { this.tone(180, 0.5, "sawtooth", 0.06); this.tone(90, 0.7, "sine", 0.08, 0.05); },
+    send() { this.tone(520, 0.08, "sine", 0.03); },
+    unlock() { this.tone(660, 0.15, "triangle", 0.05); this.tone(990, 0.2, "triangle", 0.04, 0.1); },
+  };
+
+  /* ---------------- 状态与存档 ---------------- */
+  const SAVE_KEY = "anyluo_save";
+  function defaultSave() {
+    return {
+      started: false,
+      archivesRead: {},
+      timelineOrder: null,          // [evId,...] 12项
+      timelineChecked: false,
+      timelineAttach: {},           // evId -> [archId,...]
+      poolOrder: null,              // 事件池打乱后的顺序（防"依次点击即正确"）
+      breakLevel: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },
+      missStreak: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },   // 连续无效出示计数（≥3 触发一次提示）
+      hintUsed: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },       // 每名嫌疑人最多提示 3 次
+      presented: { 王建国: [], 李慧敏: [], 陈晓东: [] },
+      conversations: { 王建国: [], 李慧敏: [], 陈晓东: [] },
+      turns: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },
+      verdict: { murderer: null, motive: null, method: null, submitted: false },
+      guideSeen: false,
+    };
+  }
+  let SAVE;
+  let suppressPersist = false;   // 重置存档后、玩家点"开始"前，禁止写回
+  function loadSave() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) {
+        const d = defaultSave();
+        const p = JSON.parse(raw);
+        Object.keys(d).forEach((k) => { if (p[k] !== undefined) d[k] = p[k]; });
+        return d;
+      }
+    } catch (e) { /* 损坏则重建 */ }
+    return defaultSave();
+  }
+  function persist() {
+    if (suppressPersist) return;
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(SAVE)); } catch (e) { /* 存储满/隐私模式则忽略 */ }
+  }
+
+  /* ---------------- 派生状态 ---------------- */
+  function timelineCorrectCount() {
+    const order = SAVE.timelineOrder || [];
+    let c = 0;
+    order.forEach((evId, i) => {
+      const ev = CASE.eventsById[evId];
+      if (ev && ev.correctOrder === i + 1) c++;
+    });
+    return c;
+  }
+  function suspectUnlocked(id) {
+    return timelineCorrectCount() >= CASE.suspects[id].unlockAt;
+  }
+  function isSuspectDone(id) {
+    const lv = SAVE.breakLevel[id];
+    return lv >= CASE.suspects[id].chain.length;
+  }
+  function archUnlocked(a) {
+    if (!a.lockedBy) return true;
+    return SAVE.breakLevel[a.lockedBy.suspect] >= a.lockedBy.level;
+  }
+  function getStatus(suspectId) {
+    const lv = SAVE.breakLevel[suspectId] || 0;   // 存档缺失/损坏时防御
+    const len = CASE.suspects[suspectId].chain.length;
+    if (lv <= 0) return "平静";
+    if (lv >= len) return "崩溃";
+    return CASE.suspects[suspectId].chain[lv - 1].status;
+  }
+
+  /* ---------------- 立绘（SVG） ---------------- */
+  function avatarSVG(suspect, status) {
+    const a = suspect.avatar;
+    const isW = status === "动摇";
+    const isC = status === "崩溃";
+    const browY = isW ? 30 : 34;
+    const mouth = isC
+      ? '<path d="M38 52 q6 -6 12 0" stroke="#7a2e24" stroke-width="2.4" fill="none"/>'
+      : isW
+        ? '<path d="M38 52 q6 4 12 0" stroke="#7a2e24" stroke-width="2.4" fill="none"/>'
+        : '<path d="M39 52 q5 4 10 0" stroke="#7a2e24" stroke-width="2.2" fill="none"/>';
+    const eyeL = isC
+      ? '<path d="M30 37 q3 -3 7 0" stroke="#2b211c" stroke-width="2" fill="none"/><path d="M33.5 41 l2.5 -3" stroke="#2b211c" stroke-width="1.4"/>'
+      : isW
+        ? '<path d="M30 38 l6 3" stroke="#2b211c" stroke-width="2"/><path d="M31 38 l6 3" stroke="#2b211c" stroke-width="1" opacity="0.4"/>'
+        : '<circle cx="33" cy="38" r="2.4" fill="#2b211c"/>';
+    const eyeR = isC
+      ? '<path d="M53 37 q3 -3 7 0" stroke="#2b211c" stroke-width="2" fill="none"/><path d="M56.5 41 l2.5 -3" stroke="#2b211c" stroke-width="1.4"/>'
+      : isW
+        ? '<path d="M52 38 l6 3" stroke="#2b211c" stroke-width="2"/><path d="M53 38 l6 3" stroke="#2b211c" stroke-width="1" opacity="0.4"/>'
+        : '<circle cx="55" cy="38" r="2.4" fill="#2b211c"/>';
+    const sweat = isC ? '<path d="M46 26 q3 4 1 7" stroke="#6fa8c9" stroke-width="1.6" fill="none"/>' : "";
+    const hair = a.face === "f"
+      ? `<path d="M18 30 q6 -16 26 -16 q20 0 26 16 q-4 -2 -8 -2 q2 6 -2 10 l0 -2 q-12 -8 -32 -8 q-4 0 -8 2 z" fill="${a.hair}"/>`
+      : `<path d="M18 32 q6 -18 32 -18 q26 0 32 18 q-3 -4 -8 -4 q2 5 -1 9 l-1 -2 q-10 -9 -22 -9 q-14 0 -23 9 l-1 2 q-3 -4 -1 -9 q-5 0 -8 4 z" fill="${a.hair}"/>`;
+    return `<svg viewBox="0 0 88 74" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="44" cy="34" rx="30" ry="33" fill="${a.skin}"/>
+      ${hair}
+      <path d="M29 ${browY} l7 3" stroke="#2b211c" stroke-width="2"/>
+      <path d="M52 ${browY} l7 3" stroke="#2b211c" stroke-width="2"/>
+      ${eyeL}${eyeR}
+      <ellipse cx="34" cy="46" r="2.6" fill="#c98a6a"/><ellipse cx="54" cy="46" r="2.6" fill="#c98a6a"/>
+      ${mouth}${sweat}
+    </svg>`;
+  }
+
+  /* ---------------- 视图切换 ---------------- */
+  let currentView = "archives";
+  function showView(name) {
+    currentView = name;
+    $$(".view").forEach((v) => v.classList.remove("active"));
+    const target = $("#view-" + name);
+    if (target) target.classList.add("active");
+    $$("#nav button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+    if (name === "interrogation") {
+      if (currentSuspect) {
+        $("#suspect-grid").style.display = "none";
+        $("#interrogation-view").style.display = "block";
+        renderChatLog();
+      } else {
+        $("#interrogation-view").style.display = "none";
+        $("#suspect-grid").style.display = "";
+        renderSuspectGrid();
+      }
+    }
+    window.scrollTo({ top: 0 });
+  }
+
+  /* ---------------- 档案室 ---------------- */
+  let archFilter = "全部";
+  function renderArchives() {
+    const grid = $("#arch-grid");
+    grid.innerHTML = "";
+    const q = ($("#arch-search").value || "").trim();
+    CASE.archives.forEach((a) => {
+      const unlocked = archUnlocked(a);
+      if (!unlocked) {
+        const card = el("div", "arch-card locked");
+        card.dataset.arch = a.id;   // 编号仅内部/测试定位用，不展示给玩家
+        card.appendChild(el("div", "lock-tip", "🔒 档案待解锁（审讯中击破证据链后获得）"));
+        grid.appendChild(card);
+        return;
+      }
+      if (archFilter !== "全部" && a.type !== archFilter) return;
+      if (q && !a.content.includes(q) && !a.id.includes(q) && !(a.person !== "—" && a.person.includes(q))) return;
+      const read = !!SAVE.archivesRead[a.id];
+      const card = el("div", "arch-card" + (read ? " read" : ""));
+      card.dataset.arch = a.id;   // 编号仅内部/测试定位用，不展示给玩家
+      const head = el("div", "arch-head");
+      head.appendChild(el("span", "arch-type type-" + a.type, a.type));
+      if (a.isFake) head.appendChild(el("span", "chip fake", "与事实矛盾?"));
+      if (!read) head.appendChild(el("span", "badge-new", "新"));
+      card.appendChild(head);
+      card.appendChild(el("div", "arch-content", a.content));
+      const meta = el("div", "arch-meta");
+      if (a.timeHint && a.timeHint !== "—") meta.appendChild(el("span", "chip", "🕐 " + a.timeHint));
+      if (a.person && a.person !== "—") meta.appendChild(el("span", "chip person", "→ " + a.person));
+      card.appendChild(meta);
+      card.addEventListener("click", () => {
+        if (!SAVE.archivesRead[a.id]) {
+          SAVE.archivesRead[a.id] = true;
+          persist();
+          renderArchives();
+        }
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  /* ---------------- 时间线 ---------------- */
+  function eventPlace(evId) {
+    const order = SAVE.timelineOrder || [];
+    return order.indexOf(evId);
+  }
+
+  /* 事件池洗牌：保证池内展示顺序 ≠ 正确顺序，玩家无法"依次点击"作弊。
+   * 洗牌结果存入存档（稳定），清空时间线时重新洗牌。 */
+  function ensurePoolOrder() {
+    if (SAVE.poolOrder && SAVE.poolOrder.length === CASE.events.length) return SAVE.poolOrder;
+    const ids = CASE.events.map((e) => e.id);
+    for (let i = ids.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [ids[i], ids[j]] = [ids[j], ids[i]];
+    }
+    SAVE.poolOrder = ids;
+    persist();
+    return ids;
+  }
+
+  function renderTimeline() {
+    const board = $("#tl-board");
+    const pool = $("#tl-pool");
+    board.innerHTML = "";
+    pool.innerHTML = "";
+    const order = SAVE.timelineOrder || [];
+    const cc = timelineCorrectCount();
+
+    // 槽位（12）
+    for (let i = 0; i < 12; i++) {
+      const slot = el("div", "tl-slot");
+      slot.dataset.slot = i;
+      slot.appendChild(el("div", "slot-no", String(i + 1).padStart(2, "0")));
+      const evId = order[i];
+      if (evId) {
+        const ev = CASE.eventsById[evId];
+        const ok = ev.correctOrder === i + 1;
+        slot.classList.add("filled");
+        if (SAVE.timelineChecked) slot.classList.add(ok ? "ok" : "wrong");
+        slot.appendChild(buildEventCard(ev, i));
+        slot.addEventListener("dragover", (e) => { e.preventDefault(); slot.classList.add("dragover"); });
+        slot.addEventListener("dragleave", () => slot.classList.remove("dragover"));
+        slot.addEventListener("drop", (e) => {
+          e.preventDefault();
+          slot.classList.remove("dragover");
+          const src = e.dataTransfer.getData("text/plain");
+          if (src) moveEventToSlot(src, i);
+        });
+        slot.addEventListener("click", () => {
+          if (evId) removeEventFromSlot(i);
+        });
+      } else {
+        slot.appendChild(el("div", "tc-desc", "（空位）"));
+        slot.addEventListener("dragover", (e) => { e.preventDefault(); slot.classList.add("dragover"); });
+        slot.addEventListener("dragleave", () => slot.classList.remove("dragover"));
+        slot.addEventListener("drop", (e) => {
+          e.preventDefault();
+          slot.classList.remove("dragover");
+          const src = e.dataTransfer.getData("text/plain");
+          if (src) moveEventToSlot(src, i);
+        });
+      }
+      board.appendChild(slot);
+    }
+
+    // 未放置事件池（展示顺序为洗牌后顺序，与正确顺序不同）
+    const placed = new Set(order);
+    ensurePoolOrder().forEach((evId) => {
+      const ev = CASE.eventsById[evId];
+      if (placed.has(ev.id)) return;
+      const card = buildEventCard(ev, -1);
+      card.draggable = true;
+      card.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", ev.id);
+        card.classList.add("dragging");
+      });
+      card.addEventListener("dragend", () => card.classList.remove("dragging"));
+      card.addEventListener("click", () => {
+        let empty = -1;
+        for (let i = 0; i < 12; i++) {
+          if (!(SAVE.timelineOrder || [])[i]) { empty = i; break; }
+        }
+        if (empty >= 0) moveEventToSlot(ev.id, empty);
+      });
+      pool.appendChild(card);
+    });
+
+    $("#tl-stats").innerHTML = `正确归位 <b>${cc}</b> / 12 · 已解锁嫌疑人：${["王建国", "李慧敏", "陈晓东"].filter((id) => suspectUnlocked(id)).map((id) => CASE.suspects[id].alias).join("、") || "无"}`;
+  }
+
+  function buildEventCard(ev, slotIdx) {
+    const card = el("div", "tl-card");
+    card.dataset.ev = ev.id;
+    const placed = slotIdx >= 0;
+    const confirmedOk = placed && SAVE.timelineChecked && ev.correctOrder === slotIdx + 1;
+    if (confirmedOk) {
+      // 校验正确后才揭示时间
+      card.appendChild(el("div", "tc-time ok", "🕐 " + ev.time));
+    } else {
+      const t = el("div", "tc-time unknown", "⏳ 时间未知");
+      t.title = "时间线索藏在档案里：先翻阅档案室，找到该事件的时间依据再排序";
+      card.appendChild(t);
+      if (placed && SAVE.timelineChecked) {
+        // 校验后仍错：卡片上给出档案线索（只给内容提示，不给编号，不直接给时间）
+        const names = (ev.hintArchs || []).map((id) => {
+          const a = CASE.archById[id];
+          return a ? "「" + a.content.slice(0, 10) + "…」" : "";
+        }).filter(Boolean);
+        const clue = el("div", "tc-clue", "🔎 线索：" + (names.length ? names.join("、") : "本案案情简报有明确叙述，想想事件本身的先后"));
+        card.appendChild(clue);
+      }
+    }
+    card.appendChild(el("div", "tc-desc", ev.desc));
+    const attach = SAVE.timelineAttach[ev.id];
+    if (attach && attach.length) {
+      const names = attach.map((id) => {
+        const a = CASE.archById[id];
+        return a ? "「" + a.content.slice(0, 8) + "…」" : "";
+      }).filter(Boolean);
+      card.appendChild(el("div", "tc-archs", "📎 " + names.join("、")));
+    }
+    if (slotIdx >= 0) {
+      const acts = el("div", "tc-actions");
+      const btn = el("button", "", "📎 挂载档案");
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openAttachModal(ev.id);
+      });
+      acts.appendChild(btn);
+      card.appendChild(acts);
+    }
+    return card;
+  }
+
+  function moveEventToSlot(evId, slotIdx) {
+    if (!SAVE.timelineOrder) SAVE.timelineOrder = Array(12).fill(undefined);
+    const order = SAVE.timelineOrder;
+    // 从原位置移除
+    const oldIdx = order.indexOf(evId);
+    if (oldIdx >= 0) order[oldIdx] = undefined;
+    // 若目标槽已有事件，交换回池
+    order[slotIdx] = evId;
+    SAVE.timelineChecked = false;
+    persist();
+    renderTimeline();
+    renderProgress();
+  }
+  function removeEventFromSlot(i) {
+    if (!SAVE.timelineOrder) SAVE.timelineOrder = Array(12).fill(undefined);
+    SAVE.timelineOrder[i] = undefined;
+    SAVE.timelineChecked = false;
+    persist();
+    renderTimeline();
+    renderProgress();
+  }
+
+  /* 挂载档案弹窗 */
+  function openAttachModal(evId) {
+    const body = $("#modal-evidence-body");
+    body.innerHTML = "";
+    const readArchs = CASE.archives.filter((a) => SAVE.archivesRead[a.id] && archUnlocked(a));
+    if (!readArchs.length) {
+      body.appendChild(el("div", "guide-step", "还没有已读档案。先去档案室翻阅档案吧。"));
+      $("#modal-evidence").style.display = "flex";
+      $("#modal-evidence").dataset.purpose = "attach:" + evId;
+      return;
+    }
+    readArchs.forEach((a) => {
+      const item = el("div", "ev-item");
+      item.dataset.arch = a.id;   // 编号仅内部定位，不展示
+      item.appendChild(el("span", "ev-text", a.content));
+      item.addEventListener("click", () => {
+        const cur = SAVE.timelineAttach[evId] || [];
+        if (!cur.includes(a.id)) {
+          SAVE.timelineAttach[evId] = [...cur, a.id];
+          persist();
+        }
+        closeModal("modal-evidence");
+        renderTimeline();
+      });
+      body.appendChild(item);
+    });
+    $("#modal-evidence").style.display = "flex";
+    $("#modal-evidence").dataset.purpose = "attach:" + evId;
+  }
+
+  /* ---------------- 审讯室 ---------------- */
+  let currentSuspect = null;
+
+  function renderSuspectGrid() {
+    const grid = $("#suspect-grid");
+    grid.innerHTML = "";
+    const cc = timelineCorrectCount();
+    ["王建国", "李慧敏", "陈晓东"].forEach((id) => {
+      const s = CASE.suspects[id];
+      const unlocked = suspectUnlocked(id);
+      const done = isSuspectDone(id);
+      const card = el("div", "suspect-card" + (unlocked ? "" : " locked"));
+      card.innerHTML = `<div class="avatar">${avatarSVG(s, getStatus(id))}</div>`;
+      card.appendChild(el("h3", "", `${s.name}（${s.alias}）`));
+      card.appendChild(el("div", "sus-role", s.role));
+      const dots = el("div", "chain-dots");
+      s.chain.forEach((_, i) => dots.appendChild(el("span", "dot" + (SAVE.breakLevel[id] > i ? " done" : ""))));
+      card.appendChild(dots);
+      if (!unlocked) {
+        card.appendChild(el("div", "lock-tip", `🔒 排对 ${s.unlockAt} 个时间线事件后解锁（当前 ${cc}）`));
+      } else if (done) {
+        card.appendChild(el("div", "sus-status " + (id === "王建国" ? "confessed" : "cleared"), id === "王建国" ? "已认罪" : "证词已自洽，嫌疑排除"));
+      } else {
+        card.appendChild(el("div", "sus-status", `证据击破 ${SAVE.breakLevel[id]} / ${s.chain.length} 级`));
+      }
+      if (unlocked) {
+        card.addEventListener("click", () => enterInterrogation(id));
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  function enterInterrogation(id) {
+    currentSuspect = id;
+    $("#suspect-grid").style.display = "none";
+    $("#interrogation-view").style.display = "block";
+    const s = CASE.suspects[id];
+    $("#iv-avatar").innerHTML = avatarSVG(s, getStatus(id));
+    $("#iv-name").textContent = `${s.name}（${s.alias}）`;
+    $("#iv-role").textContent = s.role;
+    updateIvStatus();
+    renderChatLog();
+    const quick = $("#quick-asks");
+    quick.innerHTML = "";
+    const asks = id === "王建国"
+      ? ["9月2日晚上你在哪？", "你跟周海平有什么过节？", "你去过仓库吗？", "你最近见过周海平吗？"]
+      : id === "李慧敏"
+        ? ["当晚你和周海平发生了什么？", "你几点离开仓库的？", "钥匙是怎么回事？", "案发时你在哪？"]
+        : ["案发当晚你在哪？", "你和周海平关系怎么样？", "22:10的短信是你发的吗？", "你有什么证据证明不在场？"];
+    asks.forEach((q) => {
+      const b = el("button", "", q);
+      b.addEventListener("click", () => {
+        $("#chat-input").value = q;
+        sendChat();
+      });
+      quick.appendChild(b);
+    });
+    if (SAVE.conversations[id].length === 0) {
+      pushMsg("suspect", s.intro, getStatus(id), false);
+    }
+    $("#chat-input").focus();
+  }
+
+  function exitInterrogation() {
+    currentSuspect = null;
+    $("#interrogation-view").style.display = "none";
+    $("#suspect-grid").style.display = "";
+    renderSuspectGrid();
+  }
+
+  function updateIvStatus() {
+    if (!currentSuspect) return;
+    const s = CASE.suspects[currentSuspect];
+    const st = getStatus(currentSuspect);
+    const stEl = $("#iv-status");
+    stEl.textContent = st;
+    stEl.className = "iv-status " + st;
+    $("#iv-avatar").innerHTML = avatarSVG(s, st);
+    $("#iv-chain").innerHTML = `证据击破：<b>${SAVE.breakLevel[currentSuspect]}</b> / ${s.chain.length} 级`;
+    $("#iv-turn").textContent = `轮次 ${SAVE.turns[currentSuspect]}/40`;
+  }
+
+  function renderChatLog() {
+    const log = $("#chat-log");
+    log.innerHTML = "";
+    (SAVE.conversations[currentSuspect] || []).forEach((m) => {
+      appendMsgNode(log, m);
+    });
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function pushMsg(role, text, status, scripted) {
+    const m = { role, text, status: status || "平静", scripted: !!scripted, t: Date.now() };
+    SAVE.conversations[currentSuspect].push(m);
+    appendMsgNode($("#chat-log"), m);
+    persist();
+  }
+  function appendMsgNode(log, m) {
+    const row = el("div", "msg " + (m.role === "player" ? "player" : m.role === "system" ? "system" : "suspect") + (m.scripted ? " evidence" : ""));
+    const who = el("div", "who", m.role === "player" ? "你" : m.role === "system" ? "·" : CASE.suspects[currentSuspect] ? CASE.suspects[currentSuspect].alias : "嫌疑人");
+    const bubble = el("div", "bubble", m.text);
+    row.appendChild(who);
+    row.appendChild(bubble);
+    log.appendChild(row);
+    log.scrollTop = log.scrollHeight;
+    return row;
+  }
+
+  /* 规则引擎：证据是否命中当前嫌疑人下一级 */
+  function evidenceRuleHit(suspectId, archId) {
+    const s = CASE.suspects[suspectId];
+    const lv = SAVE.breakLevel[suspectId];
+    const next = s.chain[lv];
+    if (next && next.evidence === archId) return next;
+    return null;
+  }
+
+  async function sendChat() {
+    const input = $("#chat-input");
+    const text = (input.value || "").trim();
+    if (!text || !currentSuspect) return;
+    if (SAVE.turns[currentSuspect] >= 40) {
+      pushMsg("system", "轮次已达上限（40轮）。嫌疑人不耐烦了，请出示证据或离开。", "平静");
+      return;
+    }
+    input.value = "";
+    pushMsg("player", text, "平静", false);
+    Sound.send();
+    SAVE.turns[currentSuspect]++;
+    const log = $("#chat-log");
+    const typing = el("div", "msg system");
+    typing.appendChild(el("div", "who", "·"));
+    typing.appendChild(el("div", "typing", "…"));
+    log.appendChild(typing);
+    log.scrollTop = log.scrollHeight;
+
+    const s = CASE.suspects[currentSuspect];
+    const state = {
+      breakLevel: SAVE.breakLevel[currentSuspect],
+      presented: SAVE.presented[currentSuspect].map((id) => CASE.archById[id]).filter(Boolean),
+    };
+
+    try {
+      let resp;
+      if (LLM.settings.mode === "llm" && LLM.settings.apiKey) {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 25000);
+        try {
+          resp = await LLM.ask(s, SAVE.conversations[currentSuspect].filter((m) => m.role !== "system"), state, ctrl.signal);
+        } finally {
+          clearTimeout(timer);
+        }
+        // 防护：LLM 模式若输出异常为空则降级演示
+        if (!resp || !resp.text) resp = DEMO_AI.respond(currentSuspect, text, state);
+      } else {
+        resp = DEMO_AI.respond(currentSuspect, text, state);
+      }
+      typing.remove();
+      pushMsg("suspect", resp.text, resp.status || "平静", false);
+      if (resp.status === "动摇") Sound.shake();
+      if (resp.status === "崩溃") Sound.crash();
+      updateIvStatus();
+    } catch (e) {
+      typing.remove();
+      pushMsg("system", "（AI 连接失败，已切换为内置演示模式回复）", "平静");
+      const resp = DEMO_AI.respond(currentSuspect, text, state);
+      pushMsg("suspect", resp.text, resp.status, false);
+      updateIvStatus();
+    }
+    updateIvStatus();
+  }
+
+  /* 出示证据 */
+  function openEvidenceModal() {
+    const body = $("#modal-evidence-body");
+    body.innerHTML = "";
+    const readArchs = CASE.archives.filter((a) => SAVE.archivesRead[a.id] && archUnlocked(a));
+    if (!readArchs.length) {
+      body.appendChild(el("div", "guide-step", "还没有已读档案。先去档案室翻阅档案吧。"));
+      $("#modal-evidence").style.display = "flex";
+      $("#modal-evidence").dataset.purpose = "evidence";
+      return;
+    }
+    readArchs.forEach((a) => {
+      const item = el("div", "ev-item");
+      item.dataset.arch = a.id;   // 编号仅内部定位，不展示
+      item.appendChild(el("span", "ev-text", a.content));
+      item.addEventListener("click", () => {
+        closeModal("modal-evidence");
+        presentEvidence(a);
+      });
+      body.appendChild(item);
+    });
+    $("#modal-evidence").style.display = "flex";
+    $("#modal-evidence").dataset.purpose = "evidence";
+  }
+
+  async function presentEvidence(arch) {
+    if (!currentSuspect) return;
+    if (SAVE.turns[currentSuspect] >= 40) {
+      pushMsg("system", "轮次已达上限（40轮）。", "平静");
+      return;
+    }
+    const s = CASE.suspects[currentSuspect];
+    const hit = evidenceRuleHit(currentSuspect, arch.id);
+    SAVE.turns[currentSuspect]++;
+    SAVE.presented[currentSuspect].push(arch.id);
+
+    pushMsg("player", `【出示证据】${arch.content}`, "平静", false);
+    Sound.evidence();
+
+    const log = $("#chat-log");
+    const typing = el("div", "msg system");
+    typing.appendChild(el("div", "who", "·"));
+    typing.appendChild(el("div", "typing", "…"));
+    log.appendChild(typing);
+    log.scrollTop = log.scrollHeight;
+
+    if (hit) {
+      SAVE.missStreak[currentSuspect] = 0;
+      // 命中：覆盖 AI 输出，强制脚本台词
+      setTimeout(() => {
+        typing.remove();
+        SAVE.breakLevel[currentSuspect]++;
+        pushMsg("suspect", hit.line, hit.status, true);
+        if (hit.status === "崩溃") Sound.crash(); else Sound.shake();
+        if (hit.unlock) {
+          const ua = CASE.archById[hit.unlock];
+          pushMsg("system", `📁 新档案已解锁：${ua ? "「" + ua.content.slice(0, 12) + "…」" : "一份新档案"}`, "平静");
+          Sound.unlock();
+        }
+        if (isSuspectDone(currentSuspect)) {
+          pushMsg("system", currentSuspect === "王建国" ? "王叔已全面认罪。案件真相基本浮出水面，去提交结论吧。" : "该嫌疑人证词已自洽。可以继续审问其他人或提交结论。", "平静");
+        }
+        updateIvStatus();
+        persist();
+        renderArchives();
+        renderSuspectGrid();
+      }, 400);
+    } else {
+      // 未命中：交给 AI 引擎回应
+      SAVE.missStreak[currentSuspect] = (SAVE.missStreak[currentSuspect] || 0) + 1;
+      if (SAVE.missStreak[currentSuspect] >= 3 && (SAVE.hintUsed[currentSuspect] || 0) < 3) {
+        SAVE.missStreak[currentSuspect] = 0;
+        SAVE.hintUsed[currentSuspect] = (SAVE.hintUsed[currentSuspect] || 0) + 1;
+        const hint = buildStuckHint(currentSuspect);
+        if (hint) pushMsg("system", hint, "平静");
+      }
+      persist();
+      const state = {
+        breakLevel: SAVE.breakLevel[currentSuspect],
+        presented: SAVE.presented[currentSuspect].map((id) => CASE.archById[id]).filter(Boolean),
+      };
+      try {
+        let resp;
+        if (LLM.settings.mode === "llm" && LLM.settings.apiKey) {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 25000);
+          try {
+            resp = await LLM.ask(s, SAVE.conversations[currentSuspect].filter((m) => m.role !== "system"), state, ctrl.signal);
+          } finally { clearTimeout(timer); }
+          if (!resp || !resp.text) resp = { text: "这能说明什么？", status: getStatus(currentSuspect) };
+        } else {
+          resp = { text: "这能说明什么？", status: getStatus(currentSuspect) };
+        }
+        typing.remove();
+        pushMsg("suspect", resp.text, resp.status || "平静", false);
+        if (resp.status === "崩溃") Sound.crash();
+        updateIvStatus();
+      } catch (e) {
+        typing.remove();
+        pushMsg("suspect", "这能说明什么？", getStatus(currentSuspect), false);
+        updateIvStatus();
+      }
+    }
+  }
+
+  /* 玩家卡住提示：指向该嫌疑人证据链上下一份「未出示且已可读」的档案内容（不给编号） */
+  function buildStuckHint(suspectId) {
+    const s = CASE.suspects[suspectId];
+    if (!s || !s.chain) return null;
+    const presented = SAVE.presented[suspectId] || [];
+    const next = s.chain.find((c) => {
+      const a = CASE.archById[c.evidence];
+      return a && !presented.includes(c.evidence) && archUnlocked(a);
+    });
+    if (!next) return null;
+    const a = CASE.archById[next.evidence];
+    return `📌 提示：${s.alias}的某个说法有漏洞。回档案室翻翻「${a.content.slice(0, 14)}…」这类记录，或许能戳穿他。`;
+  }
+
+  /* ---------------- 提交结论 ---------------- */
+  function renderVerdict() {
+    const renderOpts = (containerId, key, items) => {
+      const box = $("#" + containerId);
+      box.innerHTML = "";
+      items.forEach((it) => {
+        const opt = el("div", "opt" + (SAVE.verdict[key] === it.id ? " selected" : ""));
+        opt.appendChild(el("span", "radio"));
+        opt.appendChild(el("span", "", it.label));
+        opt.addEventListener("click", () => {
+          SAVE.verdict[key] = it.id;
+          persist();
+          renderVerdict();
+        });
+        box.appendChild(opt);
+      });
+    };
+    renderOpts("opts-murderer", "murderer", CASE.verdict.murderers);
+    renderOpts("opts-motive", "motive", CASE.verdict.motives);
+    renderOpts("opts-method", "method", CASE.verdict.methods);
+  }
+
+  function submitVerdict() {
+    const v = SAVE.verdict;
+    if (!v.murderer || !v.motive || !v.method) {
+      pushTopNote("请先完成三项选择再提交。");
+      return;
+    }
+    const t = CASE.truth;
+    let score = 0;
+    if (v.murderer === t.murderer) score += 60;
+    if (v.motive === t.motive) score += 20;
+    if (v.method === t.method) score += 20;
+    const grade = score === 100 ? "S" : score >= 80 ? "A" : score >= 60 ? "B" : "C";
+    const verdictRes = $("#verdict-result");
+    verdictRes.className = "show";
+    const ok = score === 100;
+    verdictRes.innerHTML = "";
+    verdictRes.appendChild(el("div", "grade", grade));
+    verdictRes.appendChild(el("div", "score-line", `得分 ${score}/100 · ${ok ? "🎉 案件告破！" : "结论存在偏差，可重新整理证据后再次提交。"}`));
+    const truth = el("div", "truth");
+    truth.appendChild(el("h4", "", "案件真相"));
+    const ul = el("ul", "");
+    [
+      ["凶手", t.murdererLabel],
+      ["动机", t.motiveLabel],
+      ["手法", t.methodLabel],
+    ].forEach(([k, val]) => {
+      const li = el("li", "", `${k}：${val}`);
+      ul.appendChild(li);
+    });
+    truth.appendChild(ul);
+    truth.appendChild(el("p", "", "还原：" + t.story));
+    verdictRes.appendChild(truth);
+    if (!SAVE.verdict.submitted) {
+      SAVE.verdict.submitted = true;
+      persist();
+    }
+    verdictRes.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function pushTopNote(msg) {
+    const old = $("#top-note");
+    if (old) old.remove();
+    const note = el("div", "guide-step");
+    note.id = "top-note";
+    note.style.cssText = "background:var(--red-bg);border:1px solid rgba(192,85,74,.5);color:var(--red);padding:10px 14px;border-radius:8px;margin-bottom:12px;";
+    note.textContent = msg;
+    const view = $(".view.active") || $("#main");
+    view.insertBefore(note, view.firstChild);
+    setTimeout(() => note.remove(), 3500);
+  }
+
+  /* ---------------- 设置 ---------------- */
+  function openSettings() {
+    const s = LLM.settings;
+    $("#set-mode").value = s.mode;
+    $("#set-baseurl").value = s.baseUrl;
+    $("#set-apikey").value = s.apiKey;
+    $("#set-model").value = s.model;
+    $("#set-llm-fields").style.display = s.mode === "llm" ? "" : "none";
+    $("#modal-settings").style.display = "flex";
+  }
+  function saveSettings() {
+    LLM.save({
+      mode: $("#set-mode").value,
+      baseUrl: $("#set-baseurl").value.trim(),
+      apiKey: $("#set-apikey").value.trim(),
+      model: $("#set-model").value.trim() || LLM.DEFAULTS.model,
+    });
+    closeModal("modal-settings");
+  }
+
+  /* ---------------- 弹窗 ---------------- */
+  function closeModal(id) {
+    $("#" + id).style.display = "none";
+  }
+
+  /* 游戏内确认弹窗（不用原生 confirm——内嵌 webview/沙箱会拦截原生对话框） */
+  let confirmCb = null;
+  function askConfirm(text, okLabel, cb) {
+    $("#confirm-text").textContent = text;
+    $("#confirm-ok").textContent = okLabel || "确定";
+    confirmCb = cb;
+    $("#modal-confirm").style.display = "flex";
+  }
+
+  /* ---------------- 引导 ---------------- */
+  function showGuide() {
+    if (SAVE.guideSeen) return;
+    $("#guide").classList.add("show");
+  }
+
+  /* ---------------- 顶栏进度 ---------------- */
+  function renderProgress() {
+    const cc = timelineCorrectCount();
+    const done = ["王建国", "李慧敏", "陈晓东"].filter((id) => isSuspectDone(id)).length;
+    $("#top-progress").textContent = `时间线 ${cc}/12 · 击破 ${done}/3`;
+  }
+
+  /* ---------------- 初始化 ---------------- */
+  function init() {
+    SAVE = loadSave();
+    // 刚重置过：进入"禁止写回"状态，直到玩家点开始（存储被沙箱禁用时静默跳过）
+    try {
+      if (sessionStorage.getItem("anyluo_reset")) {
+        sessionStorage.removeItem("anyluo_reset");
+        suppressPersist = true;
+      }
+    } catch (e) { /* 沙箱禁用存储：忽略 */ }
+    $("#cover-brief").textContent = CASE.brief;
+    $("#btn-start").addEventListener("click", () => {
+      suppressPersist = false;
+      SAVE.started = true;
+      persist();
+      $("#cover").style.display = "none";
+      $("#topbar").style.display = "flex";
+      $("#main").style.display = "block";
+      $("#footer-note").style.display = "block";
+      renderAll();
+      if (!SAVE.guideSeen) {
+        showGuide();
+      }
+    });
+
+    $("#nav").addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (b && b.dataset.view) showView(b.dataset.view);
+    });
+    // 设置入口：事件委托绑定（免疫个别 webview 下直接绑定失效；幂等，重复点击只开一次）
+    document.addEventListener("click", (e) => {
+      const g = e.target.closest ? e.target.closest("#btn-gear, #cover-gear") : null;
+      if (g && $("#modal-settings").style.display !== "flex") openSettings();
+    });
+    $("#modal-settings-close").addEventListener("click", () => closeModal("modal-settings"));
+    $("#set-save").addEventListener("click", saveSettings);
+    $("#set-reset-save").addEventListener("click", () => {
+      askConfirm("确定重置全部存档进度？此操作不可恢复。", "重置", () => LLM.resetSave());
+    });
+    $("#confirm-ok").addEventListener("click", () => {
+      closeModal("modal-confirm");
+      const cb = confirmCb;
+      confirmCb = null;
+      if (cb) cb();
+    });
+    $("#confirm-cancel").addEventListener("click", () => { closeModal("modal-confirm"); confirmCb = null; });
+    $("#modal-confirm-close").addEventListener("click", () => { closeModal("modal-confirm"); confirmCb = null; });
+    $("#modal-confirm").addEventListener("click", (e) => { if (e.target === $("#modal-confirm")) { closeModal("modal-confirm"); confirmCb = null; } });
+    $("#set-mode").addEventListener("change", () => {
+      $("#set-llm-fields").style.display = $("#set-mode").value === "llm" ? "" : "none";
+    });
+    $("#modal-evidence-close").addEventListener("click", () => closeModal("modal-evidence"));
+    $("#modal-evidence").addEventListener("click", (e) => { if (e.target === $("#modal-evidence")) closeModal("modal-evidence"); });
+    $("#modal-settings").addEventListener("click", (e) => { if (e.target === $("#modal-settings")) closeModal("modal-settings"); });
+    $("#guide-close").addEventListener("click", () => {
+      SAVE.guideSeen = true;
+      persist();
+      $("#guide").classList.remove("show");
+    });
+
+    // 档案室
+    $(".filter-bar").addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-filter]");
+      if (!b) return;
+      archFilter = b.dataset.filter;
+      $$(".filter-bar button").forEach((x) => x.classList.toggle("active", x === b));
+      renderArchives();
+    });
+    $("#arch-search").addEventListener("input", renderArchives);
+
+    // 时间线
+    $("#tl-check").addEventListener("click", () => {
+      const order = SAVE.timelineOrder || [];
+      const filled = order.filter((x) => x !== undefined).length;
+      if (filled < 12) {
+        pushTopNote(`还有 ${12 - filled} 个事件未放入时间轴。`);
+        return;
+      }
+      SAVE.timelineChecked = true;
+      persist();
+      renderTimeline();
+      const cc = timelineCorrectCount();
+      if (cc === 12) {
+        pushTopNote("✅ 时间线完整正确！全部事件时间已揭示。");
+      } else {
+        pushTopNote(`位置正确 ${cc} 处，错位 ${12 - cc} 处。查看卡片上的「🔎 线索」回档案室找时间依据吧。`);
+      }
+    });
+    $("#tl-clear").addEventListener("click", () => {
+      SAVE.timelineOrder = null;
+      SAVE.timelineChecked = false;
+      SAVE.timelineAttach = {};
+      SAVE.poolOrder = null;      // 重新洗牌
+      persist();
+      renderTimeline();
+    });
+
+    // 审讯
+    $("#btn-send").addEventListener("click", sendChat);
+    $("#chat-input").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        sendChat();
+      }
+    });
+    $("#btn-evidence").addEventListener("click", () => {
+      if (currentSuspect) openEvidenceModal();
+    });
+    $("#btn-exit-iv").addEventListener("click", exitInterrogation);
+
+    // 结论
+    $("#btn-submit-verdict").addEventListener("click", submitVerdict);
+
+    renderAll();
+  }
+
+  function renderAll() {
+    renderArchives();
+    renderTimeline();
+    renderSuspectGrid();
+    renderVerdict();
+    renderProgress();
+    if (currentSuspect) renderChatLog();
+  }
+
+  document.addEventListener("DOMContentLoaded", init);
+})();
+
+</script>
+</body>
+</html>
