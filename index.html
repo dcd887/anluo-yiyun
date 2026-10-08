@@ -88,7 +88,7 @@ input, textarea { font-family: inherit; }
   #topbar { background: rgba(20, 23, 29, 0.92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
 }
 #topbar .brand { font-weight: 800; letter-spacing: 3px; color: var(--gold); font-size: 15px; white-space: nowrap; }
-#topbar nav { display: flex; gap: 6px; flex: 1; overflow-x: auto; }
+#topbar nav { display: flex; gap: 6px; flex: 1; min-width: 0; overflow-x: auto; }
 #topbar nav button {
   background: transparent; border: 1px solid transparent; color: var(--ink-dim);
   padding: 7px 14px; border-radius: 6px; font-size: 13px; white-space: nowrap;
@@ -98,6 +98,17 @@ input, textarea { font-family: inherit; }
 #topbar nav button.locked { opacity: 0.45; }
 #topbar .progress {
   font-size: 12px; color: var(--ink-faint); white-space: nowrap; display: flex; align-items: center; gap: 8px;
+  flex-shrink: 0;
+}
+#nav-select {
+  display: none;
+  background: var(--panel2); border: 1px solid var(--line); color: var(--ink);
+  padding: 7px 10px; border-radius: 6px; font-size: 13px; max-width: 128px; min-width: 0;
+  flex-shrink: 0;
+}
+@media (max-width: 640px) {
+  #nav { display: none; }
+  #nav-select { display: block; }
 }
 #topbar .btn-gear {
   background: transparent; border: 1px solid var(--line); color: var(--ink-dim);
@@ -359,6 +370,12 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
     <button data-view="interrogation" id="nav-interrogation">🗣 审讯室</button>
     <button data-view="verdict">⚖️ 提交结论</button>
   </nav>
+  <select id="nav-select" title="切换页面">
+    <option value="archives">📁 档案室</option>
+    <option value="timeline">🕐 时间线</option>
+    <option value="interrogation">🗣 审讯室</option>
+    <option value="verdict">⚖️ 提交结论</option>
+  </select>
   <div class="progress" id="top-progress"></div>
   <button class="btn-gear" id="btn-gear" title="设置">⚙</button>
 </div>
@@ -990,7 +1007,7 @@ const LLM = {
   DEFAULTS: {
     mode: "demo",
     baseUrl: "https://api.siliconflow.cn/v1/chat/completions",
-    apiKey: "" // 参赛版不内置 Key,
+    apiKey: "", // 参赛版不内置 Key
     model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
   },
 
@@ -1265,6 +1282,8 @@ if (typeof module !== "undefined") module.exports = { LLM };
     const target = $("#view-" + name);
     if (target) target.classList.add("active");
     $$("#nav button").forEach((b) => b.classList.toggle("active", b.dataset.view === name));
+    const navSel = $("#nav-select");
+    if (navSel) navSel.value = name;
     if (name === "interrogation") {
       if (currentSuspect) {
         $("#suspect-grid").style.display = "none";
@@ -1946,10 +1965,23 @@ if (typeof module !== "undefined") module.exports = { LLM };
       const b = e.target.closest("button");
       if (b && b.dataset.view) showView(b.dataset.view);
     });
+    // 移动端下拉导航
+    const navSel = $("#nav-select");
+    if (navSel) {
+      navSel.addEventListener("change", () => showView(navSel.value));
+    }
     // 设置入口：事件委托绑定（免疫个别 webview 下直接绑定失效；幂等，重复点击只开一次）
     document.addEventListener("click", (e) => {
       const g = e.target.closest ? e.target.closest("#btn-gear, #cover-gear") : null;
       if (g && $("#modal-settings").style.display !== "flex") openSettings();
+    });
+    // 双保险：直接绑定（移动端个别浏览器对 body 级委托的点击命中不稳定）
+    ["btn-gear", "cover-gear"].forEach((id) => {
+      const b = $("#" + id);
+      if (b) b.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if ($("#modal-settings").style.display !== "flex") openSettings();
+      });
     });
     $("#modal-settings-close").addEventListener("click", () => closeModal("modal-settings"));
     $("#set-save").addEventListener("click", saveSettings);
