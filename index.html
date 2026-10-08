@@ -1004,6 +1004,10 @@ if (typeof module !== "undefined") module.exports = { DEMO_AI };
  * ============================================================ */
 
 const LLM = {
+  // 网关访问密钥：腾讯云 SCF AI 网关（anluo-ai-gateway）鉴权头
+  // 注意：前端 Key 会被公开源码看到，网关侧仍靠限流（IP/全局）兜底防滥用
+  GATEWAY_KEY: "fp-5c1eba23c3c8573fa855a45a",
+
   DEFAULTS: {
     mode: "demo",
     baseUrl: "https://1494969411-ezeovhrqz8.ap-shanghai.tencentscf.com/chat",
@@ -1089,6 +1093,7 @@ const LLM = {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${s.apiKey}`,
+        "x-gateway-key": this.GATEWAY_KEY,
       },
       body: JSON.stringify({
         model: s.model,
