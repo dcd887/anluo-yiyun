@@ -1,6 +1,7 @@
-# 《案卷疑云 · 码头仓库疑案》— MVP 开发说明（D1–D7）
+# 《疑案卷宗 · 码头仓库疑案》— MVP 开发说明（D1–D7）
 
-> 单文件参赛版：**案卷疑云_参赛版.html**（双击即可玩，无需联网/无需 API Key）
+> 单文件参赛版：**疑案卷宗_参赛版.html**（双击即可玩，无需联网/无需 API Key）
+> 在线试玩（GitHub Pages）：**https://dcd887.github.io/anluo-yiyun/**
 > 开发版源码：index.html + style.css + data.js + demo-ai.js + llm.js + app.js
 
 ---
@@ -32,9 +33,10 @@
 
 ## 三、运行方式
 
-1. **最简**：双击 `案卷疑云_参赛版.html`（Chrome/Edge 桌面版），全程无需联网。
-2. 本地服务器（开发调试）：`python3 -m http.server 8899` 后访问 `http://localhost:8899/index.html`。
-3. 存档保存在浏览器 localStorage，刷新/关闭不丢；换设备或清缓存会重置。
+1. **最简**：双击 `疑案卷宗_参赛版.html`（Chrome/Edge 桌面版），全程无需联网。
+2. **在线**：访问 https://dcd887.github.io/anluo-yiyun/（GitHub Pages 托管）。
+3. 本地服务器（开发调试）：`python3 -m http.server 8899` 后访问 `http://localhost:8899/index.html`。
+4. 存档保存在浏览器 localStorage，刷新/关闭不丢；换设备或清缓存会重置。
 
 ## 四、AI 双模式
 
@@ -80,15 +82,16 @@ app.js         主逻辑（存档/渲染/审讯/证据链/评分/WebAudio 音效
 
 ## 七、打包与提交（D7）
 
-- 打包：`node build.js` → 生成单文件 `案卷疑云_参赛版.html`（91.6 KB，CSS/JS 全内联）。
+- 打包：`node build.js` → 生成单文件 `疑案卷宗_参赛版.html`（约 100 KB，CSS/JS 全内联）。
 - 参赛可直接提交该单文件；如需部署可上传任意静态托管（GitHub Pages / Netlify 等）。
-- 建议参赛名：《案卷疑云》（可改）。
+- 建议参赛名：《疑案卷宗》（可改）。
 
 ## 八、目录文件
 
 ```
 anluo-mvp/
-├── 案卷疑云_参赛版.html    ← 参赛单文件（交付物）
+├── 疑案卷宗_参赛版.html  ← 参赛单文件（交付物）
+├── index.html            ← 同内容副本，作为 GitHub Pages 首页
 ├── index.html / style.css / data.js / demo-ai.js / llm.js / app.js   ← 开发版源码
 ├── test.js              单元测试
 ├── e2e.js               端到端测试（需先起 8899 服务）
