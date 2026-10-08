@@ -60,3 +60,23 @@ curl -X POST https://ai-gateway.你的用户名.workers.dev/chat \
   -H "Content-Type: application/json" \
   -d '{"model":"deepseek-ai/DeepSeek-R1-0528-Qwen3-8B","messages":[{"role":"user","content":"你好"}]}'
 ```
+
+---
+
+## 实际部署记录（2026-10-08）
+
+- **网关地址**：`https://wispy-rain-f21c.mcjj.workers.dev`
+- **Worker 名**：`wispy-rain-f21c`（Cloudflare 自动命名，账户 3510985146@qq.com）
+- **状态**：✅ 已部署；`LLM_API_KEY` 环境变量已配置（SiliconFlow Key）；`/health` 已验证返回 `{"ok":true,"service":"ai-gateway"}`
+- **游戏端接入**：把《疑案卷宗》设置里的 API Base URL 填 `https://wispy-rain-f21c.mcjj.workers.dev/chat`，API Key 留空
+
+### ⚠️ 国内访问注意
+
+`*.workers.dev` 域名在国内网络**直连常被墙**（实测上海网络访问超时）。影响：
+- 国内玩家通过网关调 AI 可能连不上
+- 但《疑案卷宗》演示模式（离线预置台词引擎）不受影响，仍完整可玩
+
+**后续可选方案**（任选其一）：
+1. **绑自定义域名**（推荐，需先有域名）：Cloudflare → Domains → 添加域名 → Worker 设置里绑定，国内用自定义域名访问
+2. **玩家自填 Key 兜底**：游戏 LLM 模式保留"玩家填自己的 SiliconFlow/DeepSeek Key 直连"入口，不依赖网关
+3. **换国内可直连的托管**（腾讯云函数 / Vercel 等），代码逻辑不变，改个 baseUrl 即可
