@@ -204,7 +204,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
 .tl-card .tc-actions button { background: transparent; border: none; color: var(--ink-faint); font-size: 11px; padding: 0; }
 .tl-card .tc-actions button:hover { color: var(--gold); }
 .tl-card .tc-archs { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
-.tl-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.tl-pool { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; position: sticky; bottom: 0; background: linear-gradient(to top, var(--bg) 92%, transparent); padding-top: 10px; z-index: 5; }
 .tl-pool .tl-card { cursor: grab; }
 .dragover { border-color: var(--gold) !important; background: rgba(201, 162, 39, 0.06) !important; }
 
@@ -253,7 +253,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
 }
 .msg.player { flex-direction: row-reverse; }
 .msg.player .bubble { background: rgba(201, 162, 39, 0.1); border-color: var(--gold-dim); }
-.msg.system .bubble { background: transparent; border-style: dashed; color: var(--ink-dim); font-size: 13px; }
+.msg.system .bubble { background: rgba(192, 85, 74, 0.08); border-style: dashed; border-color: rgba(192, 85, 74, 0.5); color: #e8b4a8; font-size: 13px; }
 .msg.evidence .bubble { background: rgba(192, 85, 74, 0.12); border-color: rgba(192, 85, 74, 0.5); }
 .msg .typing { color: var(--ink-faint); font-size: 13px; padding: 6px 2px; }
 
@@ -333,7 +333,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
 .guide-step b { color: var(--gold); }
 
 /* ---------- 底部提示 ---------- */
-.footer-note { text-align: center; color: var(--ink-faint); font-size: 11px; padding: 24px 0 10px; }
+.footer-note { text-align: center; color: #a8b2c4; font-size: 12px; padding: 24px 0 10px; }
 
 /* 移动端适配 */
 @media (max-width: 640px) {
@@ -451,7 +451,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
   <section class="view" id="view-verdict">
     <div class="page-head">
       <h2>提交结论</h2>
-      <p>基于你的推理，提交最终判定。系统将按真相比对评分。</p>
+      <p>基于你的推理，提交最终判定。需先拼对时间线（≥10）并击破至少一名嫌疑人；提交后按真相比对评分，满分才揭示完整真相。</p>
     </div>
     <div class="vq" id="vq-murderer">
       <h3>一、凶手是谁？</h3>
@@ -508,7 +508,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
         <div class="set-row">
           <label>API Key</label>
           <input id="set-apikey" type="password" placeholder="sk-…">
-          <span class="help">已预填 SiliconFlow Key（本机默认可用）。Key 仅保存在本地浏览器（localStorage），不上传任何服务器。比赛/公开环境建议使用演示模式。</span>
+          <span class="help">联网审讯模式会把提问与对话内容发送至你配置的服务端点（默认：项目 AI 网关，网关端另有密钥与限流保护）。Key 仅保存在本地浏览器（localStorage）。公开/比赛环境建议使用演示模式（完全离线）。</span>
         </div>
         <div class="set-row">
           <label>模型名称</label>
@@ -571,18 +571,8 @@ const CASE = {
   brief:
     "2026年9月3日清晨，城东码头三号仓库的装卸工发现老板周海平倒在货堆之间，头部有钝器击打伤。" +
     "仓库内监控在案发时段故障，只留下进出记录。你受雇整理档案、拼出时间线，并审问三名嫌疑人。",
-  truth: {
-    murderer: "王建国",
-    murdererLabel: "王建国（王叔）",
-    motive: "货款纠纷",
-    motiveLabel: "8万元货款纠纷，讨债冲突升级",
-    method: "铁撬棍",
-    methodLabel: "用仓库铁撬棍击打头部",
-    story:
-      "9月2日晚，周海平约王叔在翠湖饭店吃饭，承诺下周一还8万货款，但席间言语羞辱王叔。" +
-      "饭后周海平独自回仓库理货。王叔回家后越想越气，开车出门抵达仓库后门，进仓与周海平再次争执，" +
-      "用铁撬棍击打其头部致死，擦净凶器后驾车离开。",
-  },
+  truth: null, // 防速通：真相以 Base64 存储，仅满分提交时由 decodeTruth() 解码展示
+  TRUTH_B64: "eyJtdXJkZXJlciI6ICLnjovlu7rlm70iLCAibXVyZGVyZXJMYWJlbCI6ICLnjovlu7rlm73vvIjnjovlj5TvvIkiLCAibW90aXZlIjogIui0p+asvue6oOe6tyIsICJtb3RpdmVMYWJlbCI6ICI45LiH5YWD6LSn5qy+57qg57q377yM6K6o5YC65Yay56qB5Y2H57qnIiwgIm1ldGhvZCI6ICLpk4Hmkqzmo40iLCAibWV0aG9kTGFiZWwiOiAi55So5LuT5bqT6ZOB5pKs5qON5Ye75omT5aS06YOoIiwgInN0b3J5IjogIjnmnIgy5pel5pma77yM5ZGo5rW35bmz57qm546L5Y+U5Zyo57+g5rmW6aWt5bqX5ZCD6aWt77yM5om/6K+65LiL5ZGo5LiA6L+YOOS4h+i0p+asvu+8jOS9huW4remXtOiogOivree+nui+seeOi+WPlOOAgumlreWQjuWRqOa1t+W5s+eLrOiHquWbnuS7k+W6k+eQhui0p+OAgueOi+WPlOWbnuWutuWQjui2iuaDs+i2iuawlO+8jOW8gOi9puWHuumXqOaKtei+vuS7k+W6k+WQjumXqO+8jOi/m+S7k+S4juWRqOa1t+W5s+WGjeasoeS6ieaJp++8jOeUqOmTgeaSrOajjeWHu+aJk+WFtuWktOmDqOiHtOatu++8jOaTpuWHgOWHtuWZqOWQjumpvui9puemu+W8gOOAgiJ9",
 
   /* ---------- 时间线事件（12 条，correctOrder 为正确排序） ----------
    * hintArchs: 该事件时间依据的档案 id（事件卡不显示时间，玩家需读这些档案推理）
@@ -656,8 +646,18 @@ const CASE = {
     王建国: {
       id: "王建国", name: "王建国", alias: "王叔", age: "51岁", role: "周海平的生意伙伴，长期客户",
       avatar: { face: "m", hair: "#3d3a36", skin: "#d9a06b" },
-      unlockAt: 3, // 排对 ≥3 个事件解锁审讯
+      unlockAt: 1, // 排对 ≥1 个事件即可解锁审讯（尽早开放，降低卡关）
       intro: "你就是来查老周那事的人？行，想问什么赶紧问，我下午还约了人。",
+      fallbackPool: [
+    "你这话我没听明白，你到底想问什么？",
+    "该说的我都说了，你还想让我说什么？",
+    "……你这是在怀疑我？那你拿出证据来。",
+    "（皱眉）你怎么老揪着我不放？我说了那晚我在打牌。",
+    "（语气变硬）你查案归查案，别拿我当凶手审。",
+    "（叹气）我要有证据早拿出来了，可我真没什么好交代的。",
+    "（有点恼火）我说了多少遍了，你翻来覆去问这几句，有完没完？",
+    "（别过脸）我没什么好说的了，你想查就查，别浪费我时间。",
+  ],
       info: "我叫王建国，他们叫我老王。跟老周做了快十年生意，他一直从我这儿拿货。",
       // 谎言清单（演示 AI 与 LLM 角色卡共用）
       lies: [
@@ -692,6 +692,15 @@ const CASE = {
       avatar: { face: "f", hair: "#5a3b2a", skin: "#e6b98a" },
       unlockAt: 5,
       intro: "……又来了个查案的。行吧，问吧，我该说的都跟警察说过了。",
+      fallbackPool: [
+    "你这话我没听明白，你到底想问什么？",
+    "该说的我都说了，你还想让我说什么？",
+    "……你这是在怀疑我？我21:10就出大门了！",
+    "（皱眉）你怎么老揪着我不放？我说了多少遍了，我就取了个钥匙。",
+    "（叹气）我管仓库五年了，没干过亏心事，你查归查。",
+    "（有点恼火）该说的我都说了，你还想听什么？",
+    "（无奈）我一个仓库管理员，能跟这事有什么关系？",
+  ],
       info: "我叫李慧敏，仓库的人都叫我李姐。我管三号仓五年了，老周是我老板。",
       lies: [
         { topic: "行踪", text: "我跟他吵完架就走了，下班回家，之后没再回去过。" },
@@ -718,6 +727,15 @@ const CASE = {
       avatar: { face: "m", hair: "#26221e", skin: "#d9a06b" },
       unlockAt: 10,
       intro: "我叔的事……你们找上我了？行，问吧，我坦坦荡荡。",
+      fallbackPool: [
+    "你这话我没听明白，你到底想问什么？",
+    "该说的我都说了，你还想让我说什么？",
+    "……你这是在怀疑我？我有火车票！",
+    "（皱眉）你怎么老揪着我不放？那晚我在临江。",
+    "（叹气）我叔是我叔，我不至于为这点工资干那种事。",
+    "（有点恼火）我说了我在临江，你怎么就不信呢？",
+    "（无奈）你查吧，查清楚了还我个清白。",
+  ],
       info: "我叫陈晓东，老周是我叔，我在他仓库打零工，工资按天结。",
       lies: [
         { topic: "行踪", text: "我那天下午就去临江了，一直在那边，到第二天早上才回来。" },
@@ -801,11 +819,14 @@ const DEMO_AI = {
     // 未击破完：按主题匹配
     const rule = this.matchRules(suspectId, text);
     if (rule) {
+      SAVE.chatMissStreak[suspectId] = 0;
       const resp = rule.resp(lv, s);
       return { text: resp.text, status: resp.status || "平静" };
     }
-    // 兜底
-    return this.fallback(suspectId, text, lv, s, state.missStreak);
+    // 兜底：闲聊未命中独立计数，驱动台词逐句升级（避免复读同一句）
+    const cs = SAVE.chatMissStreak[suspectId] || 0;
+    SAVE.chatMissStreak[suspectId] = cs + 1;
+    return this.fallback(suspectId, text, lv, s, cs);
   },
 
   /** 全部击破后的终局台词 */
@@ -843,8 +864,8 @@ const DEMO_AI = {
       "（有点恼火）我说了多少遍了，你翻来覆去问这几句，有完没完？",
       "（别过脸）我没什么好说的了，你想查就查，别浪费我时间。",
     ];
-    const step = Math.min(missStreak || 0, 4);
-    const idx = Math.min(3 + step, pool.length - 1);
+    const step = Math.min(missStreak || 0, pool.length - 1);
+    const idx = step;
     return { text: pool[idx], status: step >= 3 || lv > 0 ? "动摇" : "平静" };
   },
 
@@ -1196,6 +1217,7 @@ if (typeof module !== "undefined") module.exports = { LLM };
       poolOrder: null,              // 事件池打乱后的顺序（防"依次点击即正确"）
       breakLevel: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },
       missStreak: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },   // 连续无效出示计数（≥3 触发一次提示）
+  chatMissStreak: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },   // 闲聊未命中主题计数（驱动兜底台词升级，独立于出示证据）
       hintUsed: { 王建国: 0, 李慧敏: 0, 陈晓东: 0 },       // 每名嫌疑人最多提示 3 次
       presented: { 王建国: [], 李慧敏: [], 陈晓东: [] },
       conversations: { 王建国: [], 李慧敏: [], 陈晓东: [] },
@@ -1290,7 +1312,24 @@ if (typeof module !== "undefined") module.exports = { LLM };
 
   /* ---------------- 视图切换 ---------------- */
   let currentView = "archives";
+/* 提交结论解锁判定：时间线排对 ≥10 且击破任一嫌疑人 */
+function verdictUnlocked() {
+  return timelineCorrectCount() >= 10 && Object.keys(SAVE.breakLevel).some((id) => SAVE.breakLevel[id] > 0);
+}
+/* 真相 Base64 解码（UTF-8 安全），仅满分提交时调用 */
+function decodeTruth() {
+  try {
+    const _b = atob(CASE.TRUTH_B64);
+    const _u = new Uint8Array(_b.length);
+    for (let _i = 0; _i < _b.length; _i++) _u[_i] = _b.charCodeAt(_i);
+    return JSON.parse(new TextDecoder().decode(_u));
+  } catch (e) { return null; }
+}
   function showView(name) {
+    if (name === "verdict" && !verdictUnlocked()) {
+      pushTopNote("证据还不充分。先把时间线拼对（≥10），并在审讯室击破至少一名嫌疑人的说法，再来提交结论。");
+      return;
+    }
     currentView = name;
     $$(".view").forEach((v) => v.classList.remove("active"));
     const target = $("#view-" + name);
@@ -1321,7 +1360,8 @@ if (typeof module !== "undefined") module.exports = { LLM };
     CASE.archives.forEach((a) => {
       const unlocked = archUnlocked(a);
       if (!unlocked) {
-        const card = el("div", "arch-card locked");
+        if (q) return;   // 搜索时跳过锁定占位，避免混入无关结果
+    const card = el("div", "arch-card locked");
         card.dataset.arch = a.id;   // 编号仅内部/测试定位用，不展示给玩家
         card.appendChild(el("div", "lock-tip", "🔒 档案待解锁（审讯中击破证据链后获得）"));
         grid.appendChild(card);
@@ -1335,8 +1375,11 @@ if (typeof module !== "undefined") module.exports = { LLM };
       const head = el("div", "arch-head");
       head.appendChild(el("span", "arch-type type-" + a.type, a.type));
       if (a.isFake) {
+// 防剧透：全部反证已读 + 该嫌疑人已解锁审讯，才显示矛盾标记（成为推理确认而非开局答案）
 const _rf = a.refuteBy || [];
-if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendChild(el("span", "chip fake", "与事实矛盾?"));
+const _aliasMap = { 王叔: "王建国", 李姐: "李慧敏", 小陈: "陈晓东" };
+const _sus = _aliasMap[a.person];
+if (_rf.length > 0 && _rf.every((_id) => SAVE.archivesRead[_id]) && (!_sus || suspectUnlocked(_sus))) head.appendChild(el("span", "chip fake", "与事实矛盾?"));
 }
       if (!read) head.appendChild(el("span", "badge-new", "新"));
       card.appendChild(head);
@@ -1383,6 +1426,7 @@ if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendCh
     pool.innerHTML = "";
     const order = SAVE.timelineOrder || [];
     const cc = timelineCorrectCount();
+    if (cc === 12) SAVE.timelineChecked = true;   // 全部排对自动揭示时间（无需再点提交校验）
 
     // 槽位（12）
     for (let i = 0; i < 12; i++) {
@@ -1487,6 +1531,15 @@ if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendCh
       acts.appendChild(btn);
       card.appendChild(acts);
     }
+    // 无障碍：键盘可操作（Enter/Space 触发与点击相同的动作）
+    card.setAttribute("role", "button");
+    card.tabIndex = 0;
+    card.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        card.click();
+      }
+    });
     return card;
   }
 
@@ -1565,7 +1618,7 @@ if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendCh
       } else if (done) {
         card.appendChild(el("div", "sus-status " + (id === "王建国" ? "confessed" : "cleared"), id === "王建国" ? "已认罪" : "证词已自洽，嫌疑排除"));
       } else {
-        card.appendChild(el("div", "sus-status", `证据击破 ${SAVE.breakLevel[id]} / ${s.chain.length} 级`));
+        card.appendChild(el("div", "sus-status", `${id === "王建国" ? "证据击破" : "排除嫌疑"} ${SAVE.breakLevel[id]} / ${s.chain.length} 级`));
       }
       if (unlocked) {
         card.addEventListener("click", () => enterInterrogation(id));
@@ -1620,7 +1673,7 @@ if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendCh
     stEl.textContent = st;
     stEl.className = "iv-status " + st;
     $("#iv-avatar").innerHTML = avatarSVG(s, st);
-    $("#iv-chain").innerHTML = `证据击破：<b>${SAVE.breakLevel[currentSuspect]}</b> / ${s.chain.length} 级`;
+    $("#iv-chain").innerHTML = `${currentSuspect === "王建国" ? "证据击破" : "排除嫌疑"}：<b>${SAVE.breakLevel[currentSuspect]}</b> / ${s.chain.length} 级`;
     $("#iv-turn").textContent = `轮次 ${SAVE.turns[currentSuspect]}/40`;
   }
 
@@ -1707,7 +1760,7 @@ if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendCh
       updateIvStatus();
     } catch (e) {
       typing.remove();
-      pushMsg("system", "（AI 连接失败，已切换为内置演示模式回复）", "平静");
+      pushMsg("system", "⚠ 联网审讯暂不可用，已自动切换为离线演示模式——不影响推理，可继续提问。", "平静");
       const resp = DEMO_AI.respond(currentSuspect, text, state);
       pushMsg("suspect", resp.text, resp.status, false);
       updateIvStatus();
@@ -1863,32 +1916,42 @@ if (_rf.length === 0 || _rf.some((_id) => SAVE.archivesRead[_id])) head.appendCh
       pushTopNote("请先完成三项选择再提交。");
       return;
     }
-    const t = CASE.truth;
+    const t = decodeTruth();
     let score = 0;
-    if (v.murderer === t.murderer) score += 60;
-    if (v.motive === t.motive) score += 20;
-    if (v.method === t.method) score += 20;
+    if (t && v.murderer === t.murderer) score += 60;
+    if (t && v.motive === t.motive) score += 20;
+    if (t && v.method === t.method) score += 20;
     const grade = score === 100 ? "S" : score >= 80 ? "A" : score >= 60 ? "B" : "C";
     const verdictRes = $("#verdict-result");
     verdictRes.className = "show";
     const ok = score === 100;
     verdictRes.innerHTML = "";
     verdictRes.appendChild(el("div", "grade", grade));
-    verdictRes.appendChild(el("div", "score-line", `得分 ${score}/100 · ${ok ? "🎉 案件告破！" : "结论存在偏差，可重新整理证据后再次提交。"}`));
-    const truth = el("div", "truth");
-    truth.appendChild(el("h4", "", "案件真相"));
-    const ul = el("ul", "");
-    [
-      ["凶手", t.murdererLabel],
-      ["动机", t.motiveLabel],
-      ["手法", t.methodLabel],
-    ].forEach(([k, val]) => {
-      const li = el("li", "", `${k}：${val}`);
-      ul.appendChild(li);
-    });
-    truth.appendChild(ul);
-    truth.appendChild(el("p", "", "还原：" + t.story));
-    verdictRes.appendChild(truth);
+    verdictRes.appendChild(el("div", "score-line", `得分 ${score}/100 · ${ok ? "🎉 案件告破！" : "结论存在偏差，继续整理证据、再审讯确认，再回来提交。"}`));
+    if (ok && t) {
+      // 仅满分时揭示完整真相（防开局速通剧透）
+      const truth = el("div", "truth");
+      truth.appendChild(el("h4", "", "案件真相"));
+      const ul = el("ul", "");
+      [
+        ["凶手", t.murdererLabel],
+        ["动机", t.motiveLabel],
+        ["手法", t.methodLabel],
+      ].forEach(([k, val]) => {
+        const li = el("li", "", `${k}：${val}`);
+        ul.appendChild(li);
+      });
+      truth.appendChild(ul);
+      truth.appendChild(el("p", "", "还原：" + t.story));
+      verdictRes.appendChild(truth);
+    } else {
+      // 未满分：只给方向性偏差提示，不点名真相
+      const diff = [];
+      if (v.murderer !== (t && t.murderer)) diff.push("凶手判断有误");
+      if (v.motive !== (t && t.motive)) diff.push("动机判断有误");
+      if (v.method !== (t && t.method)) diff.push("手法判断有误");
+      if (diff.length) verdictRes.appendChild(el("div", "verdict-hint", "偏差提示：" + diff.join("、") + "。"));
+    }
     if (!SAVE.verdict.submitted) {
       SAVE.verdict.submitted = true;
       persist();
