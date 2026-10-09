@@ -545,8 +545,8 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
   <div class="modal">
     <div class="modal-head"><h3>操作引导</h3></div>
     <div class="modal-body">
-      <div class="guide-step">1. <b>档案室</b>：翻阅 30 份档案，注意时间提示与人物指向，寻找互相矛盾的说辞。</div>
-      <div class="guide-step">2. <b>时间线</b>：事件卡不标注时间，需从档案中寻找时间依据推断先后，排对后时间才会揭示。排对事件可解锁嫌疑人传唤资格。</div>
+      <div class="guide-step">1. <b>档案室</b>：翻阅 31 份档案，注意时间提示与人物指向，寻找互相矛盾的说辞。</div>
+      <div class="guide-step">2. <b>时间线</b>：事件卡不标注时间，多为匿名画面，人物身份需翻阅档案确认；找到时间依据推断先后，排对后时间才会揭示。排对事件可解锁嫌疑人传唤资格。</div>
       <div class="guide-step">3. <b>审讯室</b>：自由提问嫌疑人。出示已读档案可触发"证据击破"，强制其动摇甚至崩溃。</div>
       <div class="guide-step">4. <b>提交结论</b>：凶手 + 动机 + 手法三项全对即可破案。</div>
       <div class="guide-step" style="color:var(--ink-faint)">进度自动保存在本浏览器。右上角⚙可切换演示/LLM模式。</div>
@@ -569,7 +569,7 @@ const CASE = {
   subtitle: "城东码头三号仓库 · 2026年9月3日清晨",
   brief:
     "2026年9月3日清晨，城东码头三号仓库的装卸工发现老板周海平倒在货堆之间，头部有钝器击打伤。" +
-    "仓库内监控在案发时段故障，只留下进出记录。你受雇整理档案、拼出时间线，并审问三名嫌疑人。",
+    "仓库内监控在案发时段故障，只留下进出记录；周海平的黑色轿车整夜停在仓库正门外。你受雇整理档案、拼出时间线，并审问三名嫌疑人。",
   truth: {
     murderer: "王建国",
     murdererLabel: "王建国（王叔）",
@@ -587,21 +587,21 @@ const CASE = {
    * hintArchs: 该事件时间依据的档案 id（事件卡不显示时间，玩家需读这些档案推理）
    */
   events: [
-    { id: "ev_001", time: "19:40", desc: "周海平与王叔在翠湖饭店共进晚餐", correctOrder: 1, unlocks: null, hintArchs: ["arch_024", "arch_002"] },
-    { id: "ev_002", time: "20:50", desc: "李姐因货物堆放违规与周海平在办公室争吵", correctOrder: 2, unlocks: null, hintArchs: ["arch_003", "arch_028"] },
+    { id: "ev_001", time: "19:40", desc: "两人在翠湖饭店共进晚餐（一人为周海平，另一人身份待核实）", correctOrder: 1, unlocks: null, hintArchs: ["arch_024", "arch_002"] },
+    { id: "ev_002", time: "20:50", desc: "一名女员工在办公室与周海平发生争执", correctOrder: 2, unlocks: null, hintArchs: ["arch_003", "arch_028"] },
     { id: "ev_003", time: "21:00", desc: "周海平独自进入三号仓库", correctOrder: 3, unlocks: "王建国", hintArchs: ["arch_004", "arch_028"] },
-    { id: "ev_004", time: "21:05", desc: "李姐折返仓库办公室取落下的钥匙", correctOrder: 4, unlocks: null, hintArchs: ["arch_005", "arch_003"] },
-    { id: "ev_005", time: "21:10", desc: "李姐离开仓库", correctOrder: 5, unlocks: "李慧敏", hintArchs: ["arch_005"] },
-    { id: "ev_006", time: "21:15", desc: "王叔从家中开车出门", correctOrder: 6, unlocks: null, hintArchs: ["arch_027", "arch_017", "arch_008"] },
+    { id: "ev_004", time: "21:05", desc: "一名女员工折返仓库办公室，取走钥匙", correctOrder: 4, unlocks: null, hintArchs: ["arch_005", "arch_003"] },
+    { id: "ev_005", time: "21:10", desc: "该女员工离开仓库", correctOrder: 5, unlocks: "李慧敏", hintArchs: ["arch_005"] },
+    { id: "ev_006", time: "21:15", desc: "一名男子深夜开车出门", correctOrder: 6, unlocks: null, hintArchs: ["arch_027", "arch_017", "arch_008"] },
     { id: "ev_007", time: "21:25", desc: "黑色轿车停在三号仓库后门", correctOrder: 7, unlocks: null, hintArchs: ["arch_014", "arch_006"] },
     { id: "ev_008", time: "21:28", desc: "一名男子从仓库后门进入三号仓库（身形壮实，身份待核实）", correctOrder: 8, unlocks: null, hintArchs: ["arch_014", "arch_023"] },
     { id: "ev_009", time: "21:32", desc: "三号仓库内照明灯闪烁，约几分钟后恢复", correctOrder: 9, unlocks: null, hintArchs: ["arch_010", "arch_018", "arch_023"] },
     { id: "ev_010", time: "21:35", desc: "黑色轿车从仓库后门驶离，车灯熄灭", correctOrder: 10, unlocks: "陈晓东", hintArchs: ["arch_015", "arch_023"] },
-    { id: "ev_011", time: "22:10", desc: "小陈发短信向周海平讨要工资", correctOrder: 11, unlocks: null, hintArchs: ["arch_019", "arch_013", "arch_026"] },
+    { id: "ev_011", time: "22:10", desc: "一条催促工资的短信发送给周海平", correctOrder: 11, unlocks: null, hintArchs: ["arch_019", "arch_013", "arch_026"] },
     { id: "ev_012", time: "次日08:00", desc: "装卸工发现周海平尸体并报警", correctOrder: 12, unlocks: null, hintArchs: [] },
   ],
 
-  /* ---------- 档案（30 条） ----------
+  /* ---------- 档案（31 条） ----------
    * type: 物证 | 证词 | 报告 | 影像
    * lockedBy: 需要击破某嫌疑人某级证据链才解锁（null = 初始可见）
    * 时间推理设计：
@@ -647,6 +647,7 @@ const CASE = {
     { id: "arch_014", type: "影像", content: "仓库后门监控：黑色轿车停后门，驾驶员下车，身形壮实，穿深色外套", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
     { id: "arch_015", type: "影像", content: "仓库后门监控：同一辆黑色轿车从后门驶离，车灯熄灭行驶", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
     { id: "arch_024", type: "影像", content: "翠湖饭店门口监控：王叔与周海平前后脚走出饭店，周海平上车离开，王叔门口站约两分钟，表情阴沉", timeHint: "20:20", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_031", type: "影像", content: "仓库正门监控：周海平的黑色轿车停在正门停车位，从傍晚直至次日清晨始终未移动（车钥匙在办公室抽屉内找到）", timeHint: "—", person: "周海平", isFake: false, lockedBy: null },
   ],
 
   /* ---------- 嫌疑人（3 名） ---------- */
