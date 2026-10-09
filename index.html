@@ -681,9 +681,9 @@ const CASE = {
       ],
       guard: [
         "只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。",
-        "不得承认任何档案中未记录的事实；被证据击中时必须执行脚本台词。",
-        "每轮回复不超过60字，只回应玩家当前提问，不主动展开新信息。",
-        "玩家出示不在你反应表中的证据时，回复：这能说明什么？并维持原状态。",
+        "你没有被对应证据击中前，绝不承认杀人；用否认、反问、转移话题应对，但态度要自然，不要生硬复读。",
+        "可以谈论档案已揭示或你 admits 清单里的内容，被追问时可以补充这些内容的细节（当时心情、场景、说过什么话）。",
+        "玩家出示不在你反应表中的证据时，先表现出困惑或不安，再反问对方想说明什么，情绪要有波动。",
       ],
     },
     李慧敏: {
@@ -707,9 +707,9 @@ const CASE = {
       ],
       guard: [
         "只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。",
-        "不得承认任何档案中未记录的事实；被证据击中时必须执行脚本台词。",
-        "每轮回复不超过60字，只回应玩家当前提问，不主动展开新信息。",
-        "玩家出示不在你反应表中的证据时，回复：这能说明什么？并维持原状态。",
+        "你没有被对应证据击中前，绝不承认杀人；用否认、反问、转移话题应对，但态度要自然，不要生硬复读。",
+        "可以谈论档案已揭示或你 admits 清单里的内容，被追问时可以补充这些内容的细节（当时心情、场景、说过什么话）。",
+        "玩家出示不在你反应表中的证据时，先表现出困惑或不安，再反问对方想说明什么，情绪要有波动。",
       ],
     },
     陈晓东: {
@@ -733,9 +733,9 @@ const CASE = {
       ],
       guard: [
         "只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。",
-        "不得承认任何档案中未记录的事实；被证据击中时必须执行脚本台词。",
-        "每轮回复不超过60字，只回应玩家当前提问，不主动展开新信息。",
-        "玩家出示不在你反应表中的证据时，回复：这能说明什么？并维持原状态。",
+        "你没有被对应证据击中前，绝不承认杀人；用否认、反问、转移话题应对，但态度要自然，不要生硬复读。",
+        "可以谈论档案已揭示或你 admits 清单里的内容，被追问时可以补充这些内容的细节（当时心情、场景、说过什么话）。",
+        "玩家出示不在你反应表中的证据时，先表现出困惑或不安，再反问对方想说明什么，情绪要有波动。",
       ],
     },
   },
@@ -804,7 +804,7 @@ const DEMO_AI = {
       return { text: resp.text, status: resp.status || "平静" };
     }
     // 兜底
-    return this.fallback(suspectId, text, lv, s);
+    return this.fallback(suspectId, text, lv, s, state.missStreak);
   },
 
   /** 全部击破后的终局台词 */
@@ -827,8 +827,8 @@ const DEMO_AI = {
     return null;
   },
 
-  /** 未命中主题时的兜底回应（轮换，避免重复） */
-  fallback(suspectId, text, lv, s) {
+  /** 未命中主题时的兜底回应（按追问次数升级，避免复读同一句） */
+  fallback(suspectId, text, lv, s, missStreak) {
     if (this.isUnrelated(text)) {
       return { text: "和案子无关的事我不想聊。", status: "平静" };
     }
@@ -836,9 +836,15 @@ const DEMO_AI = {
       "你这话我没听明白，你到底想问什么？",
       "该说的我都说了，你还想让我说什么？",
       "……你这是在怀疑我？那你拿出证据来。",
+      "（皱眉）你怎么老揪着我不放？我说了当时不在那儿。",
+      "（语气变硬）你查案归查案，别拿我当凶手审。",
+      "（叹气）我要有证据早拿出来了，可我真没什么好交代的。",
+      "（有点恼火）我说了多少遍了，你翻来覆去问这几句，有完没完？",
+      "（别过脸）我没什么好说的了，你想查就查，别浪费我时间。",
     ];
-    const idx = (text.length + (lv || 0)) % pool.length;
-    return { text: pool[idx], status: lv > 0 ? "动摇" : "平静" };
+    const step = Math.min(missStreak || 0, 4);
+    const idx = Math.min(3 + step, pool.length - 1);
+    return { text: pool[idx], status: step >= 3 || lv > 0 ? "动摇" : "平静" };
   },
 
   isUnrelated(text) {
@@ -1010,7 +1016,7 @@ const LLM = {
   GATEWAY_KEY: "fp-5c1eba23c3c8573fa855a45a",
 
   DEFAULTS: {
-    mode: "demo",
+    mode: "llm",
     baseUrl: "https://1494969411-ezeovhrqz8.ap-shanghai.tencentscf.com/chat",
     apiKey: "", // 参赛版不内置 Key
     model: "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
@@ -1075,7 +1081,8 @@ const LLM = {
     lines.push("【硬性约束】");
     suspect.guard.forEach((g) => lines.push(`- ${g}`));
     lines.push("- 只允许谈论本案相关话题，无关话题统一回复：和案子无关的事我不想聊。");
-    lines.push("- 每轮回复不超过60字，口语化，略带紧张或防御，绝不用书面语。");
+    lines.push("- 每轮回复不超过100字，口语化，带语气和情绪，绝不用书面语。");
+    lines.push("- 玩家追问但没有出示证据时，不要复读同一句话：用反问、否认、转移话题、装糊涂、不耐烦等方式轮换应对，态度要有起伏。");
     lines.push("- 回复末尾必须附加状态标签，格式：[[状态:平静]] 或 [[状态:动摇]] 或 [[状态:崩溃]]");
     return lines.join("\n");
   },
@@ -1086,7 +1093,7 @@ const LLM = {
     const sys = this.buildSystemPrompt(suspect, state);
     const messages = [
       { role: "system", content: sys },
-      ...history.slice(-12).map((m) => ({ role: m.role === "player" ? "user" : "assistant", content: m.text })),
+      ...history.slice(-24).map((m) => ({ role: m.role === "player" ? "user" : "assistant", content: m.text })),
     ];
     const resp = await fetch(s.baseUrl, {
       method: "POST",
@@ -1670,12 +1677,13 @@ if (typeof module !== "undefined") module.exports = { LLM };
     const s = CASE.suspects[currentSuspect];
     const state = {
       breakLevel: SAVE.breakLevel[currentSuspect],
+      missStreak: SAVE.missStreak[currentSuspect] || 0,
       presented: SAVE.presented[currentSuspect].map((id) => CASE.archById[id]).filter(Boolean),
     };
 
     try {
       let resp;
-      if (LLM.settings.mode === "llm" && LLM.settings.apiKey) {
+      if (LLM.settings.mode === "llm" && LLM.settings.baseUrl) {
         const ctrl = new AbortController();
         const timer = setTimeout(() => ctrl.abort(), 25000);
         try {
@@ -1782,11 +1790,12 @@ if (typeof module !== "undefined") module.exports = { LLM };
       persist();
       const state = {
         breakLevel: SAVE.breakLevel[currentSuspect],
+        missStreak: SAVE.missStreak[currentSuspect] || 0,
         presented: SAVE.presented[currentSuspect].map((id) => CASE.archById[id]).filter(Boolean),
       };
       try {
         let resp;
-        if (LLM.settings.mode === "llm" && LLM.settings.apiKey) {
+        if (LLM.settings.mode === "llm" && LLM.settings.baseUrl) {
           const ctrl = new AbortController();
           const timer = setTimeout(() => ctrl.abort(), 25000);
           try {
