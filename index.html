@@ -377,7 +377,8 @@ main { max-width: 1080px; margin: 0 auto; padding: 18px 16px 80px; }
     <option value="verdict">⚖️ 提交结论</option>
   </select>
   <div class="progress" id="top-progress"></div>
-  <button class="btn-gear" id="btn-gear" title="设置">⚙</button>
+  <button class="btn-gear" id="btn-refresh" title="重新开始">🔄</button>
+<button class="btn-gear" id="btn-gear" title="设置">⚙</button>
 </div>
 
 <!-- ===== 主区 ===== -->
@@ -1039,6 +1040,7 @@ const LLM = {
   resetSave() {
     try {
       localStorage.removeItem("anyluo_save");
+      localStorage.removeItem("anyluo_settings");
       // 标记"刚重置"：reload 后首轮渲染（事件池洗牌等）不得立即写回存档
       sessionStorage.setItem("anyluo_reset", "1");
     } catch (e) { /* 存储禁用时仍重载 */ }
@@ -1997,7 +1999,10 @@ if (typeof module !== "undefined") module.exports = { LLM };
         if ($("#modal-settings").style.display !== "flex") openSettings();
       });
     });
-    $("#modal-settings-close").addEventListener("click", () => closeModal("modal-settings"));
+    $("#btn-refresh").addEventListener("click", () => {
+askConfirm("确定重新开始？将清除当前进度并刷新页面。", "重新开始", () => LLM.resetSave());
+});
+$("#modal-settings-close").addEventListener("click", () => closeModal("modal-settings"));
     $("#set-save").addEventListener("click", saveSettings);
     $("#set-reset-save").addEventListener("click", () => {
       askConfirm("确定重置全部存档进度？此操作不可恢复。", "重置", () => LLM.resetSave());
