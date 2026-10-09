@@ -569,7 +569,7 @@ const CASE = {
   subtitle: "城东码头三号仓库 · 2026年9月3日清晨",
   brief:
     "2026年9月3日清晨，城东码头三号仓库的装卸工发现老板周海平倒在货堆之间，头部有钝器击打伤。" +
-    "仓库内监控在案发时段故障，只留下进出记录；周海平的黑色轿车整夜停在仓库正门外。你受雇整理档案、拼出时间线，并审问三名嫌疑人。",
+    "仓库内监控在案发时段故障，只留下进出记录。你受雇整理档案、拼出时间线，并审问三名嫌疑人。",
   truth: {
     murderer: "王建国",
     murdererLabel: "王建国（王叔）",
@@ -588,12 +588,12 @@ const CASE = {
    */
   events: [
     { id: "ev_001", time: "19:40", desc: "两人在翠湖饭店共进晚餐（一人为周海平，另一人身份待核实）", correctOrder: 1, unlocks: null, hintArchs: ["arch_024", "arch_002"] },
-    { id: "ev_002", time: "20:50", desc: "一名女员工在办公室与周海平发生争执", correctOrder: 2, unlocks: null, hintArchs: ["arch_003", "arch_028"] },
+    { id: "ev_002", time: "20:50", desc: "一名员工在办公室与周海平发生争执", correctOrder: 2, unlocks: null, hintArchs: ["arch_003", "arch_028"] },
     { id: "ev_003", time: "21:00", desc: "周海平独自进入三号仓库", correctOrder: 3, unlocks: "王建国", hintArchs: ["arch_004", "arch_028"] },
-    { id: "ev_004", time: "21:05", desc: "一名女员工折返仓库办公室，取走钥匙", correctOrder: 4, unlocks: null, hintArchs: ["arch_005", "arch_003"] },
-    { id: "ev_005", time: "21:10", desc: "该女员工离开仓库", correctOrder: 5, unlocks: "李慧敏", hintArchs: ["arch_005"] },
+    { id: "ev_004", time: "21:05", desc: "一名员工折返仓库办公室，取走钥匙", correctOrder: 4, unlocks: null, hintArchs: ["arch_005", "arch_003"] },
+    { id: "ev_005", time: "21:10", desc: "该员工离开仓库", correctOrder: 5, unlocks: "李慧敏", hintArchs: ["arch_005"] },
     { id: "ev_006", time: "21:15", desc: "一名男子深夜开车出门", correctOrder: 6, unlocks: null, hintArchs: ["arch_027", "arch_017", "arch_008"] },
-    { id: "ev_007", time: "21:25", desc: "黑色轿车停在三号仓库后门", correctOrder: 7, unlocks: null, hintArchs: ["arch_014", "arch_006"] },
+    { id: "ev_007", time: "21:25", desc: "黑色轿车停在三号仓库后门", correctOrder: 7, unlocks: null, hintArchs: ["arch_014", "arch_006", "arch_023"] },
     { id: "ev_008", time: "21:28", desc: "一名男子从仓库后门进入三号仓库（身形壮实，身份待核实）", correctOrder: 8, unlocks: null, hintArchs: ["arch_014", "arch_023"] },
     { id: "ev_009", time: "21:32", desc: "三号仓库内照明灯闪烁，约几分钟后恢复", correctOrder: 9, unlocks: null, hintArchs: ["arch_010", "arch_018", "arch_023"] },
     { id: "ev_010", time: "21:35", desc: "黑色轿车从仓库后门驶离，车灯熄灭", correctOrder: 10, unlocks: "陈晓东", hintArchs: ["arch_015", "arch_023"] },
@@ -611,29 +611,29 @@ const CASE = {
    */
   archives: [
     // —— 物证（9 条）——
-    { id: "arch_001", type: "物证", content: "翠湖饭店晚餐收据：两人份，共156元，桌号A7", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
-    { id: "arch_009", type: "物证", content: "周海平手机通话记录：案发当晚拨给王叔一次未接，时长0秒", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_001", type: "物证", content: "翠湖饭店晚餐收据：两人份，共156元，桌号A7", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_009", type: "物证", content: "周海平手机通话记录：案发当晚拨出一个电话未接通，时长0秒", timeHint: "—", person: "—", isFake: false, lockedBy: null },
     { id: "arch_011", type: "物证", content: "凶器鉴定：货堆旁铁撬棍，长60cm，表面新鲜擦拭痕迹，棍头残留微量血迹（与死者血型一致）", timeHint: "—", person: "—", isFake: false, lockedBy: null },
-    { id: "arch_013", type: "物证", content: "小陈火车票：城东站出发，到达临江市（距城东约200公里），车程约2小时50分", timeHint: "18:40-21:30", person: "小陈", isFake: false, lockedBy: null },
+    { id: "arch_013", type: "物证", content: "火车票：城东站出发，到达临江市（距城东约200公里），车程约2小时50分", timeHint: "18:40-21:30", person: "—", isFake: false, lockedBy: null },
     { id: "arch_016", type: "物证", content: "仓库后门脚印勘验：案发时段后42码运动鞋印，与王叔鞋码吻合（李姐37码、小陈43码不符）", timeHint: "—", person: "王叔", isFake: false, lockedBy: { suspect: "王建国", level: 3 } },
-    { id: "arch_019", type: "物证", content: "周海平手机短信：小陈发来“叔，工资什么时候发？我这边房租要到期了。”状态：已发送未读", timeHint: "—", person: "小陈", isFake: false, lockedBy: null },
+    { id: "arch_019", type: "物证", content: "周海平手机短信：“叔，工资什么时候发？我这边房租要到期了。”状态：已发送未读", timeHint: "—", person: "—", isFake: false, lockedBy: null },
     { id: "arch_021", type: "物证", content: "仓库办公室钥匙登记表：李姐名下保管一把三号仓库钥匙，案发当日无借出归还异常", timeHint: "—", person: "李姐", isFake: false, lockedBy: { suspect: "李慧敏", level: 1 } },
-    { id: "arch_023", type: "物证", content: "王叔轿车行车记录仪：记录显示从家中出发→抵达城东码头→停留约十分钟→离开→返回小区；其中抵达码头后约三分钟起、持续约六分钟的画面被手指遮挡", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_023", type: "物证", content: "一辆轿车行车记录仪：记录显示从某住宅小区出发→抵达城东码头→停留约十分钟→离开→返回该小区；其中抵达码头后约三分钟起、持续约六分钟的画面被手指遮挡", timeHint: "—", person: "—", isFake: false, lockedBy: null },
     { id: "arch_026", type: "物证", content: "周海平手机定位：案发当晚进入三号仓库范围后不再移动", timeHint: "—", person: "—", isFake: false, lockedBy: null },
 
     // —— 证词（12 条）——
-    { id: "arch_002", type: "证词", content: "翠湖饭店服务员：A7桌两位中年男子吃饭约四十分钟，离开时个子较高那位（王叔）脸色很难看", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_002", type: "证词", content: "翠湖饭店服务员：A7桌两位中年男子吃饭约四十分钟，离开时个子较高的那位脸色很难看", timeHint: "—", person: "—", isFake: false, lockedBy: null },
     { id: "arch_003", type: "证词", content: "李姐首次证词：下班后跟他吵了一架，他骂我把货堆得挡了过道。我气走了，走了才发现钥匙落办公室，折回去取了一趟，取完就走了，之后没再回去", timeHint: "—", person: "李姐", isFake: false, lockedBy: null },
-    { id: "arch_006", type: "证词", content: "装卸工赵强：当晚看到三号仓库后门停了辆黑色轿车，车灯亮着没熄火，过了一会儿才走", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_006", type: "证词", content: "装卸工赵强：当晚看到三号仓库后门停了辆黑色轿车，车灯亮着没熄火，过了一会儿才走；码头入口那阵子也停过一辆黑色轿车，不知是不是同一辆", timeHint: "—", person: "—", isFake: false, lockedBy: null },
     { id: "arch_007", type: "证词", content: "王叔首次证词：9月2日晚在老赵家打牌，一直在；最近没见过周海平", timeHint: "—", person: "王叔", isFake: true, lockedBy: null },
-    { id: "arch_008", type: "证词", content: "老赵证词：王叔来打牌，中途说肚子不舒服出去透气，走了挺久才回来", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_008", type: "证词", content: "老赵证词：当晚一伙人打牌，中途一人说肚子不舒服出去透气，走了挺久才回来", timeHint: "—", person: "—", isFake: false, lockedBy: null },
     { id: "arch_012", type: "证词", content: "小陈证词：周海平侄子，打零工；当晚发过短信催工资；人当天在外地没去过仓库", timeHint: "—", person: "小陈", isFake: false, lockedBy: null },
     { id: "arch_017", type: "证词", content: "王叔妻子：丈夫当晚说出去打牌，出门挺晚的，回来也快半夜了；外套袖口有深色污渍，他说是蹭的茶水", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
     { id: "arch_020", type: "证词", content: "李姐补充证词：钥匙是下班后发现落办公室，折回去取，与首次证词一致", timeHint: "—", person: "李姐", isFake: false, lockedBy: null },
     { id: "arch_022", type: "证词", content: "王叔第二次证词：“我说了那天在打牌。什么收据？我不知道。”（语气明显紧张）", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
-    { id: "arch_027", type: "证词", content: "邻居王婶：当晚遛狗看到老王开车出去，平时很少这么晚出门", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
-    { id: "arch_028", type: "证词", content: "仓库安保员：三号仓库前门当晚只有周老板和李姐刷卡进出；后门不刷卡谁都能进；当晚仓库监控画面的时间戳区域正好故障，只能看清人物和动作；仓库规定20:30下班锁门", timeHint: "—", person: "—", isFake: false, lockedBy: null },
-    { id: "arch_029", type: "证词", content: "装卸工小刘：周老板欠王老板8万货款全仓库都知道；上个月王老板来吵得很凶，说“再不还就法庭见”", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_027", type: "证词", content: "邻居王婶：当晚遛狗时看到有人深夜开车出门，天色暗没看清是谁，平时很少这么晚出门", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_028", type: "证词", content: "仓库安保员：三号仓库前门当晚只有周老板和李姐刷卡进出；后门不刷卡谁都能进；当晚仓库监控画面的时间戳区域正好故障，只能看清人物和动作；仓库规定20:30下班", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_029", type: "证词", content: "装卸工小刘：周老板欠王老板8万货款全仓库都知道；上个月王老板来吵得很凶，说“再不还就法庭见”", timeHint: "—", person: "—", isFake: false, lockedBy: null },
 
     // —— 报告（4 条）——
     { id: "arch_010", type: "报告", content: "验尸报告：左颞部一处钝器击打伤，颅骨骨折，颅内出血致死；死亡时间推断当晚21:00-22:00", timeHint: "21:00-22:00", person: "—", isFake: false, lockedBy: null },
@@ -643,10 +643,10 @@ const CASE = {
 
     // —— 影像（5 条，仓库监控时间戳故障，仅描述画面）——
     { id: "arch_004", type: "影像", content: "仓库正门监控：周海平独自刷卡进入三号仓库，手持手机", timeHint: "—", person: "周海平", isFake: false, lockedBy: null },
-    { id: "arch_005", type: "影像", content: "仓库正门监控：李姐刷卡进入，约几分钟后刷卡离开，手持钥匙串", timeHint: "—", person: "李姐", isFake: false, lockedBy: null },
-    { id: "arch_014", type: "影像", content: "仓库后门监控：黑色轿车停后门，驾驶员下车，身形壮实，穿深色外套", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
-    { id: "arch_015", type: "影像", content: "仓库后门监控：同一辆黑色轿车从后门驶离，车灯熄灭行驶", timeHint: "—", person: "王叔", isFake: false, lockedBy: null },
-    { id: "arch_024", type: "影像", content: "翠湖饭店门口监控：王叔与周海平前后脚走出饭店，周海平上车离开，王叔门口站约两分钟，表情阴沉", timeHint: "20:20", person: "王叔", isFake: false, lockedBy: null },
+    { id: "arch_005", type: "影像", content: "仓库正门监控：一名员工刷卡进入，约几分钟后刷卡离开，手持钥匙串", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_014", type: "影像", content: "仓库后门监控：黑色轿车停后门，驾驶员下车，身形壮实，穿深色外套", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_015", type: "影像", content: "仓库后门监控：同一辆黑色轿车从后门驶离，车灯熄灭行驶", timeHint: "—", person: "—", isFake: false, lockedBy: null },
+    { id: "arch_024", type: "影像", content: "翠湖饭店门口监控：两名男子前后脚走出饭店，一人为周海平，上车离开；另一人在门口站约两分钟，表情阴沉", timeHint: "20:20", person: "—", isFake: false, lockedBy: null },
     { id: "arch_031", type: "影像", content: "仓库正门监控：周海平的黑色轿车停在正门停车位，从傍晚直至次日清晨始终未移动（车钥匙在办公室抽屉内找到）", timeHint: "—", person: "周海平", isFake: false, lockedBy: null },
   ],
 
@@ -1338,7 +1338,7 @@ if (typeof module !== "undefined") module.exports = { LLM };
       card.appendChild(el("div", "arch-content", a.content));
       const meta = el("div", "arch-meta");
       if (a.timeHint && a.timeHint !== "—") meta.appendChild(el("span", "chip", "🕐 " + a.timeHint));
-      if (a.person && a.person !== "—") meta.appendChild(el("span", "chip person", "→ " + a.person));
+      
       card.appendChild(meta);
       card.addEventListener("click", () => {
         if (!SAVE.archivesRead[a.id]) {
