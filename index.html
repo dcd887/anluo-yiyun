@@ -2159,7 +2159,327 @@ $("#modal-settings-close").addEventListener("click", () => closeModal("modal-set
     if (currentSuspect) renderChatLog();
   }
 
+  /* ============================================================
+   * 自测入口：#auto=full
+   * ------------------------------------------------------------
+   * 仅当 URL 带 auto=full（如 https://…/#auto=full）时激活；
+   * 玩家正常打开（无 hash）时下面的代码只是定义，不产生任何副作用，
+   * 也不会改动存档、DOM 或既有事件绑定。
+   *
+   * 契约：
+   *  1) 全程「真实点击真实元素」：对目标节点派发 pointerdown/mousedown/
+   *     pointerup/mouseup/click 一整串真实事件（带真实文档坐标），
+   *     由游戏自己的监听器推进流程。
+   *  2) 不直接写 SAVE/breakLevel/archivesRead，不调用内部函数跳过流程；
+   *     只以「只读」方式查 CASE 数据来决定该点哪一个元素
+   *     （时间线正确序号 / 证据链下一级 / 结论正确项）。
+   *  3) 每一步打印：阶段名 + 时间 + 状态签名（view/dom 长度/localStorage 长度/
+   *     已读档案数/时间线正确数/击破级数），只比 innerText 会误判。
+   *  4) 跑完把分阶段时间戳、步骤数、最终评分写入 localStorage["anyluo_selftest"]。
+   * ============================================================ */
+  const AUTO_MODE = (location.hash.match(/auto=([a-z0-9]+)/i) || [])[1];
+  const AUTO_KEY = "anyluo_selftest";
+  const AUTO_START_DELAY = 1500;      // 留出「开局」截图时间
+  let AUTO_LOG = [];
+  let AUTO_TOTAL = 0;
+  let AUTO_OK = 0;
+  const AUTO_FAIL = [];
+
+  const aSleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  function aClock() {
+    const d = new Date();
+    const p = (n, w) => String(n).padStart(w || 2, "0");
+    return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}.${p(d.getMilliseconds(), 3)}`;
+  }
+  /* 状态签名：DOM 长度 + localStorage 长度 + 派生计数（缺一项都可能把「点了没反应」判成成功） */
+  function aSig() {
+    let lsLen = -1;
+    try { lsLen = (localStorage.getItem(SAVE_KEY) || "").length; } catch (e) { lsLen = -1; }
+    const view = ($(".view.active") || {}).id || "-";
+    const readN = Object.keys((SAVE && SAVE.archivesRead) || {}).length;
+    const brk = ["王建国", "李慧敏", "陈晓东"].map((id) => (SAVE && SAVE.breakLevel[id]) | 0).join("/");
+    return `view=${view} dom=${document.body.innerHTML.length} ls=${lsLen} read=${readN}/31 tl=${timelineCorrectCount()}/12 brk=${brk}`;
+  }
+  function aStep(phase, msg, ok) {
+    AUTO_TOTAL++;
+    if (ok) AUTO_OK++; else AUTO_FAIL.push(phase + "：" + msg);
+    const line = `[auto] ${aClock()} 阶段=${phase} ${msg} ok=${ok ? 1 : 0} | ${aSig()}`;
+    AUTO_LOG.push(line);
+    console.log(line);
+    return !!ok;
+  }
+  /* 探测项：只报告、不计入流程步骤（用于暴露「不阻断通关但已经坏掉」的路径） */
+  const AUTO_PROBES = {};
+  function aProbe(name, ok, note) {
+    const line = `[auto] ${aClock()} 探测=${name} ${note} ok=${ok ? 1 : 0} | ${aSig()}`;
+    AUTO_LOG.push(line);
+    console.log(line);
+    AUTO_PROBES[name] = { ok: !!ok, note: note, at: new Date().toISOString() };
+    return !!ok;
+  }
+  function aPhaseDone(name, t0, extra) {
+    const info = Object.assign({ at: new Date().toISOString(), ms: Date.now() - t0 }, extra || {});
+    const line = `[auto] ${aClock()} ---- 阶段完成：${name} 用时=${info.ms}ms ${JSON.stringify(extra || {})} | ${aSig()}`;
+    AUTO_LOG.push(line);
+    console.log(line);
+    return info;
+  }
+  /* 真实点击：整串鼠标/指针事件，坐标取节点实际矩形中心 */
+  function aClick(node, label) {
+    if (!node) { aStep("点击", `元素缺失 ${label}`, false); return false; }
+    try { node.scrollIntoView({ block: "center", inline: "center" }); } catch (e) { /* 不可见环境忽略 */ }
+    const r = node.getBoundingClientRect();
+    const cx = Math.round(r.left + r.width / 2);
+    const cy = Math.round(r.top + r.height / 2);
+    const base = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, button: 0, buttons: 0, detail: 1 };
+    const ptr = Object.assign({ pointerId: 1, pointerType: "mouse", isPrimary: true }, base);
+    try {
+      node.dispatchEvent(new PointerEvent("pointerdown", ptr));
+      node.dispatchEvent(new MouseEvent("mousedown", base));
+      node.dispatchEvent(new PointerEvent("pointerup", ptr));
+      node.dispatchEvent(new MouseEvent("mouseup", base));
+      node.dispatchEvent(new MouseEvent("click", base));
+    } catch (e) {
+      aStep("点击", `派发失败 ${label}: ${e && e.message}`, false);
+      return false;
+    }
+    return true;
+  }
+  async function aWaitFor(fn, ms) {
+    const t0 = Date.now();
+    while (Date.now() - t0 < (ms || 3000)) { if (fn()) return true; await aSleep(50); }
+    return false;
+  }
+
+  /* 档案室：把「当前已解锁但未读」的档案全部真实点开（每轮重查 DOM，因每次点击会整块重渲染） */
+  async function aReadArchives(tag) {
+    showView("archives");
+    await aSleep(60);
+    let total = 0;
+    for (let pass = 0; pass < 40; pass++) {
+      const n = $$("#arch-grid .arch-card:not(.locked)").length;
+      let did = 0;
+      for (let i = 0; i < n; i++) {
+        const card = $$("#arch-grid .arch-card:not(.locked)")[i];
+        if (!card) continue;
+        const id = card.dataset.arch;
+        if (!id || (SAVE.archivesRead && SAVE.archivesRead[id])) continue;
+        const before = Object.keys(SAVE.archivesRead).length;
+        aClick(card, "arch-card:" + id);
+        await aSleep(8);
+        const after = Object.keys(SAVE.archivesRead).length;
+        aStep(tag, `点击档案 ${id}（已读 ${before}→${after}）`, after === before + 1);
+        did++; total++;
+      }
+      if (!did) break;
+    }
+    return total;
+  }
+
+  /* 时间线：按正确序号依次真实点击池内事件卡（游戏自己的 click 会把它落到第一个空位） */
+  async function aTimeline(tag) {
+    showView("timeline");
+    await aSleep(80);
+    for (let k = 1; k <= 12; k++) {
+      const ev = CASE.events.filter((e) => e.correctOrder === k)[0];
+      const card = $(`#tl-pool .tl-card[data-ev="${ev.id}"]`);
+      const before = timelineCorrectCount();
+      aClick(card, "tl-card:" + ev.id);
+      await aSleep(60);
+      const after = timelineCorrectCount();
+      aStep(tag, `第 ${k} 位 ← ${ev.id}（池内点击落位）正确数 ${before}→${after}`, after === k);
+    }
+    aClick($("#tl-check"), "#tl-check");
+    await aSleep(220);
+    const cc = timelineCorrectCount();
+    aStep(tag, `点击 #tl-check 校验：${cc}/12 且时间已揭示`, cc === 12 && SAVE.timelineChecked);
+    return cc;
+  }
+
+  function aSuspectCard(id) {
+    const alias = CASE.suspects[id].alias;
+    return $$("#suspect-grid .suspect-card").filter((c) => c.textContent.indexOf(alias) >= 0)[0];
+  }
+
+  /* 审讯室：逐级出示证据（证据 = 已读档案，走 openEvidenceModal 的真实列表项点击） */
+  async function aInterrogate(id, tag) {
+    const s = CASE.suspects[id];
+    const alias = s.alias;
+    const chain = s.chain;
+    if (currentSuspect && currentSuspect !== id) { aClick($("#btn-exit-iv"), "#btn-exit-iv"); await aSleep(120); }
+    for (let lv = 0; lv < chain.length; lv++) {
+      const need = chain[lv].evidence;
+      let broke = false;
+      for (let attempt = 1; attempt <= 4 && !broke; attempt++) {
+        /* 上一级击破可能解锁新档案，先回档案室读掉，否则证据列表里没有它 */
+        await aReadArchives(tag);
+        showView("interrogation");
+        await aSleep(90);
+        if (currentSuspect !== id) {
+          if (currentSuspect) { aClick($("#btn-exit-iv"), "#btn-exit-iv"); await aSleep(100); }
+          const card = aSuspectCard(id);
+          aClick(card, "suspect-card:" + alias);
+          await aSleep(150);
+          if (!aStep(tag, `点击嫌疑人卡进入审讯：${alias}`, currentSuspect === id)) break;
+        }
+        if (lv === 0 && attempt === 1) {   // 顺带探测「快速提问」这条真实聊天路径（只报告，不算流程步骤）
+          const q = $$("#quick-asks button")[0];
+          const s0 = $$("#chat-log .msg.suspect").length;
+          if (q) {
+            aClick(q, "quick-ask");
+            await aSleep(600);
+            const s1 = $$("#chat-log .msg.suspect").length;
+            aProbe("聊天回话", s1 > s0, `${alias} 点「${q.textContent}」后嫌疑人气泡 ${s0}→${s1}` + (s1 > s0 ? "" : "（嫌疑未回话：演示模式回复函数引用未定义的全局 SAVE，见 run_log 的 pageerror）"));
+          }
+        }
+        aClick($("#btn-evidence"), "#btn-evidence");
+        await aSleep(140);
+        const item = $(`#modal-evidence-body .ev-item[data-arch="${need}"]`);
+        if (!item) {
+          if ($("#modal-evidence").style.display === "flex") aClick($("#modal-evidence-close"), "#modal-evidence-close");
+          await aSleep(90);
+          continue;   // 证据还没在库里 → 下一轮补读档案
+        }
+        const before = SAVE.breakLevel[id] | 0;
+        aClick(item, "evidence:" + need);
+        await aSleep(950);          // presentEvidence 命中路径有 400ms 定时器
+        const after = SAVE.breakLevel[id] | 0;
+        broke = after > before;
+        aStep(tag, `${alias} 出示 ${need}（第 ${lv + 1}/${chain.length} 级）击破 ${before}→${after}`, broke);
+        if (!broke) break;
+      }
+      if (!broke) return false;
+    }
+    const done = (SAVE.breakLevel[id] | 0) >= chain.length;
+    aStep(tag, `${alias} 证据链 ${SAVE.breakLevel[id]}/${chain.length} 级${done ? "（已击破）" : ""}`, done);
+    return done;
+  }
+
+  /* 结论：三项各点一次正确选项，再点提交（评分由游戏自己算，落 DOM 里读回） */
+  async function aVerdict(tag) {
+    showView("verdict");
+    await aSleep(160);
+    if (!$("#view-verdict").classList.contains("active")) { aStep(tag, "提交结论页未解锁", false); return null; }
+    const t = decodeTruth();
+    const triples = [
+      ["opts-murderer", CASE.verdict.murderers, t && t.murderer, "murderer"],
+      ["opts-motive", CASE.verdict.motives, t && t.motive, "motive"],
+      ["opts-method", CASE.verdict.methods, t && t.method, "method"],
+    ];
+    for (let i = 0; i < triples.length; i++) {
+      const boxId = triples[i][0], arr = triples[i][1], want = triples[i][2], key = triples[i][3];
+      const idx = arr.findIndex((o) => o.id === want);
+      const opt = $$("#" + boxId + " .opt")[idx];
+      aClick(opt, boxId + ":" + want);
+      await aSleep(90);
+      aStep(tag, `选择 ${boxId} → ${want}`, SAVE.verdict[key] === want);
+    }
+    aClick($("#btn-submit-verdict"), "#btn-submit-verdict");
+    await aSleep(450);
+    const gradeEl = $("#verdict-result .grade");
+    const scoreEl = $("#verdict-result .score-line");
+    const grade = gradeEl ? gradeEl.textContent.trim() : "";
+    const scoreLine = scoreEl ? scoreEl.textContent.trim() : "";
+    const m = scoreLine.match(/(\d+)\s*\/\s*100/);
+    const score = m ? parseInt(m[1], 10) : -1;
+    aStep(tag, `提交结论：评分 ${grade} / ${scoreLine || "（无结果文本）"}`, score === 100 && grade === "S");
+    return { grade: grade, score: score, scoreLine: scoreLine };
+  }
+
+  async function runAutoFull() {
+    const t00 = Date.now();
+    const rec = { hash: location.hash, startedAt: new Date().toISOString(), phases: {}, steps: {}, final: null, log: AUTO_LOG };
+    console.log("[auto] ===== 自测开始 #auto=full（真实点击驱动，不改内部状态）=====");
+    await aSleep(AUTO_START_DELAY);
+    try {
+      /* 阶段 1：开局 */
+      let t0 = Date.now();
+      aClick($("#btn-start"), "#btn-start");
+      const started = await aWaitFor(() => $("#main").style.display === "block", 3000);
+      aStep("开局", "点击 #btn-start 进入游戏", started);
+      if ($("#guide").classList.contains("show")) {
+        aClick($("#guide-close"), "#guide-close");
+        await aSleep(150);
+        aStep("开局", "关闭操作引导层", !$("#guide").classList.contains("show"));
+      }
+      rec.phases.start = aPhaseDone("开局", t0, { started: started });
+
+      /* 阶段 2：档案室 */
+      t0 = Date.now();
+      await aReadArchives("档案室");
+      const readN = Object.keys(SAVE.archivesRead).length;
+      aStep("档案室", `已读档案 ${readN}/31（初始可见部分）`, readN >= 20);
+      rec.phases.archives = aPhaseDone("档案室", t0, { read: readN });
+
+      /* 阶段 3：时间线 */
+      t0 = Date.now();
+      const cc = await aTimeline("时间线");
+      rec.phases.timeline = aPhaseDone("时间线", t0, { correct: cc, checked: !!SAVE.timelineChecked });
+
+      /* 阶段 4：审讯室（三人都审，9 级证据链） */
+      t0 = Date.now();
+      const sus = {};
+      const order = ["王建国", "李慧敏", "陈晓东"];
+      for (let i = 0; i < order.length; i++) {
+        const id = order[i];
+        sus[id] = await aInterrogate(id, "审讯室");
+      }
+      rec.phases.interrogation = aPhaseDone("审讯室", t0, { results: sus });
+
+      /* 阶段 5：提交结论 */
+      t0 = Date.now();
+      const vres = await aVerdict("结论");
+      rec.phases.verdict = aPhaseDone("结论", t0, vres || {});
+
+      rec.finishedAt = new Date().toISOString();
+      rec.elapsedMs = Date.now() - t00;
+      rec.steps = { total: AUTO_TOTAL, ok: AUTO_OK, failed: AUTO_FAIL.slice(0, 30) };
+      rec.probes = AUTO_PROBES;
+      rec.final = {
+        grade: vres ? vres.grade : "",
+        score: vres ? vres.score : -1,
+        scoreLine: vres ? vres.scoreLine : "",
+        timelineCorrect: timelineCorrectCount(),
+        timelineChecked: !!SAVE.timelineChecked,
+        archivesRead: Object.keys(SAVE.archivesRead).length,
+        breakLevel: Object.assign({}, SAVE.breakLevel),
+        chainTotal: order.reduce((n, id) => n + CASE.suspects[id].chain.length, 0),
+        chainDone: order.reduce((n, id) => n + (SAVE.breakLevel[id] | 0), 0),
+        verdict: Object.assign({}, SAVE.verdict),
+      };
+      rec.ok = AUTO_TOTAL > 0 && AUTO_OK === AUTO_TOTAL && rec.final.score === 100;
+      try { localStorage.setItem(AUTO_KEY, JSON.stringify(rec)); } catch (e) { /* 存储禁用则只留日志 */ }
+      console.log(`[auto] ===== 自测结束 步骤 ${AUTO_OK}/${AUTO_TOTAL} 评分 ${rec.final.grade}(${rec.final.score}) 用时 ${rec.elapsedMs}ms ok=${rec.ok} | ${aSig()} =====`);    } catch (err) {
+      rec.error = (err && err.message) || String(err);
+      rec.finishedAt = new Date().toISOString();
+      rec.steps = { total: AUTO_TOTAL, ok: AUTO_OK, failed: AUTO_FAIL.slice(0, 30) };
+      rec.ok = false;
+      console.log("[auto] !! 异常终止：" + rec.error + " | " + aSig());
+      try { localStorage.setItem(AUTO_KEY, JSON.stringify(rec)); } catch (e) { /* 忽略 */ }
+    }
+    window.__anluoAutoResult = rec;
+    return rec;
+  }
+
+  /* 只读调试口：不提供改内部状态的入口 */
+  window.__anluoAuto = {
+    mode: AUTO_MODE || null,
+    sig: () => aSig(),
+    log: () => AUTO_LOG.slice(),
+    result: () => window.__anluoAutoResult || null,
+  };
+
+  if (AUTO_MODE) {
+    /* 自测前清档：保证每次 #auto=full 都是全新一局（仅 auto 模式，正常游玩不受影响） */
+    try { localStorage.removeItem(SAVE_KEY); localStorage.removeItem(AUTO_KEY); } catch (e) { /* 忽略 */ }
+  }
   document.addEventListener("DOMContentLoaded", init);
+  if (AUTO_MODE) {
+    document.addEventListener("DOMContentLoaded", () => {
+      /* init 先注册先执行，这里延后一拍再开跑 */
+      setTimeout(() => { runAutoFull(); }, 80);
+    });
+  }
 })();
 
 </script>
