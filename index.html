@@ -797,6 +797,10 @@ if (typeof module !== "undefined") module.exports = { CASE };
 if (typeof window === "undefined") { global.CASE = require("./data.js").CASE; }
 
 const DEMO_AI = {
+  // 闲聊未命中计数：原先误用 IIFE 局部变量 SAVE（第 1229 行才声明）导致
+  // ReferenceError，演示模式提问整条挂掉。改为挂在 DEMO_AI 自己身上，
+  // 保持本模块可独立被 Node 测试 require（不依赖全局）。
+  _miss: {},
   /**
    * 生成嫌疑人回应
    * @param {string} suspectId 嫌疑人 id（王建国/李慧敏/陈晓东）
@@ -819,13 +823,13 @@ const DEMO_AI = {
     // 未击破完：按主题匹配
     const rule = this.matchRules(suspectId, text);
     if (rule) {
-      SAVE.chatMissStreak[suspectId] = 0;
+      this._miss[suspectId] = 0;
       const resp = rule.resp(lv, s);
       return { text: resp.text, status: resp.status || "平静" };
     }
     // 兜底：闲聊未命中独立计数，驱动台词逐句升级（避免复读同一句）
-    const cs = SAVE.chatMissStreak[suspectId] || 0;
-    SAVE.chatMissStreak[suspectId] = cs + 1;
+    const cs = this._miss[suspectId] || 0;
+    this._miss[suspectId] = cs + 1;
     return this.fallback(suspectId, text, lv, s, cs);
   },
 
